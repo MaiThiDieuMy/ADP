@@ -4,7 +4,6 @@ Tổng quan:
 
 Admin: Quản lý tài khoản giáo viên, phân quyền môn học và lớp học.
 Giáo viên: Quản lý điểm sinh viên, xem phân công và thông tin cá nhân.
-Ngày hiện tại: 20/03/2025.
 
 Cấu trúc giao diện và tính năng chi tiết:
 1. Trang đầu tiên (Home):
@@ -92,4 +91,3 @@ Hệ thống đăng nhập thông minh, tự phân quyền.
 Quy trình phân quyền môn học/lớp học linh hoạt (chọn sẵn hoặc thêm mới).
 Quản lý điểm đa dạng (3 cách nhập) và có lịch sử chỉnh sửa.
 Tính năng tìm kiếm và lọc hiệu quả với học kỳ
-hãy viết app web theo mô tả trên bằng django, html, css, python, javascript
