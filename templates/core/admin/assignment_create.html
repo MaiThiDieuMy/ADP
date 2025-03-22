@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Thêm mới Phân công giảng dạy - Hệ thống Quản lý Điểm Sinh viên{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4><i class="fas fa-chalkboard-teacher"></i> Thêm mới phân công giảng dạy</h4>
+            <div>
+                <a href="{% url 'teacher_assignment_list' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% if not semesters %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Chưa có học kỳ nào được tạo. 
+                    <a href="{% url 'semester_create' %}" class="alert-link">Nhấn vào đây</a> để tạo học kỳ trước khi phân công giảng dạy.
+                </div>
+            {% else %}
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="teacher">Giáo viên</label>
+                        <select class="form-select" id="teacher" name="teacher" required>
+                            <option value="">-- Chọn giáo viên --</option>
+                            {% for teacher in teachers %}
+                            <option value="{{ teacher.id }}">{{ teacher.user.get_full_name }} ({{ teacher.user.username }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Vui lòng chọn giáo viên.
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="subject">Môn học</label>
+                        <select class="form-select" id="subject" name="subject" required>
+                            <option value="">-- Chọn môn học --</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Vui lòng chọn môn học.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label>Lớp học (có thể chọn nhiều)</label>
+                        <div class="border p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                            {% for classroom in classrooms %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="classrooms" value="{{ classroom.id }}" id="classroom_{{ classroom.id }}">
+                                <label class="form-check-label" for="classroom_{{ classroom.id }}">
+                                    {{ classroom.name }} ({{ classroom.class_code }})
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="invalid-feedback d-block" id="classroom-error" style="display: none;">
+                            Vui lòng chọn ít nhất một lớp học.
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="semester">Học kỳ</label>
+                        <select class="form-select" id="semester" name="semester" required>
+                            <option value="">-- Chọn học kỳ --</option>
+                            {% for semester in semesters %}
+                            <option value="{{ semester.id }}">{{ semester.name }}{% if semester.is_active %} (Đang hoạt động){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Vui lòng chọn học kỳ.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        <i class="fas fa-save"></i> Lưu phân công
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Custom validation for checkbox group
+    document.querySelector('form').addEventListener('submit', function(event) {
+        let checkboxes = document.querySelectorAll('input[name="classrooms"]:checked');
+        if (checkboxes.length === 0) {
+            event.preventDefault();
+            document.getElementById('classroom-error').style.display = 'block';
+        } else {
+            document.getElementById('classroom-error').style.display = 'none';
+        }
+    });
+    
+    // Bootstrap validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %} 

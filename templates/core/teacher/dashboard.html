@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Hệ thống quản lý điểm{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">
+    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+</h1>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Danh sách lớp dạy</h5>
+            <div>
+                <form method="get" class="d-flex">
+                    {% if active_semesters.count > 1 %}
+                    <select name="semester" class="form-select me-2" onchange="this.form.submit()">
+                        <option value="">Tất cả học kỳ</option>
+                        {% for semester in active_semesters %}
+                        <option value="{{ semester.id }}" {% if request.GET.semester|add:"0" == semester.id %}selected{% endif %}>
+                            {{ semester.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% endif %}
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm môn học..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-outline-light">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if not active_semesters %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>Không có học kỳ nào đang hoạt động. Vui lòng liên hệ quản trị viên để kích hoạt học kỳ.
+        </div>
+        {% endif %}
+        
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Lớp</th>
+                        <th>Môn học</th>
+                        <th>Học kỳ</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignment in assignments %}
+                    <tr>
+                        <td>{{ assignment.classroom.name }}</td>
+                        <td>{{ assignment.subject.name }}</td>
+                        <td>{{ assignment.semester.name }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'class_grades' assignment.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit me-1"></i> Quản lý điểm
+                                </a>
+                                <a href="{% url 'teacher_class_students' assignment.id %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-users me-1"></i> Danh sách SV
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">Không tìm thấy lớp dạy nào.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if teacher %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Thông tin cá nhân</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Tên đăng nhập:</strong> {{ teacher.user.username }}</p>
+                <p><strong>Họ tên:</strong> {{ teacher.user.get_full_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Email:</strong> {{ teacher.user.email|default:"-" }}</p>
+                <p><strong>Số điện thoại:</strong> {{ teacher.phone|default:"-" }}</p>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a href="{% url 'teacher_profile' %}" class="btn btn-primary">
+                <i class="fas fa-user-edit me-1"></i> Cập nhật thông tin
+            </a>
+            <a href="{% url 'teacher_change_password' %}" class="btn btn-secondary">
+                <i class="fas fa-key me-1"></i> Đổi mật khẩu
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %} 

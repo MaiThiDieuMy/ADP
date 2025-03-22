@@ -1,0 +1,50 @@
+from django.urls import path
+from django.contrib.auth.views import LogoutView
+from . import views
+
+urlpatterns = [
+    # Common URLs
+    path('', views.home, name='home'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    
+    # Admin URLs
+    path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('dashboard/teachers/', views.teacher_list, name='teacher_list'),
+    path('dashboard/teachers/create/', views.teacher_create, name='teacher_create'),
+    path('dashboard/teachers/<int:teacher_id>/', views.teacher_detail, name='teacher_detail'),
+    path('dashboard/teachers/<int:teacher_id>/toggle-status/', views.teacher_toggle_status, name='teacher_toggle_status'),
+    path('dashboard/teachers/<int:teacher_id>/delete/', views.teacher_delete, name='teacher_delete'),
+    path('dashboard/teachers/<int:teacher_id>/reset-password/', views.teacher_reset_password, name='teacher_reset_password'),
+    path('dashboard/teachers/<int:teacher_id>/update/', views.teacher_update, name='update_teacher'),
+    
+    path('dashboard/subjects/', views.subject_list, name='subject_list'),
+    path('dashboard/subjects/create/', views.subject_create, name='subject_create'),
+    
+    path('dashboard/classrooms/', views.classroom_list, name='classroom_list'),
+    path('dashboard/classrooms/create/', views.classroom_create, name='classroom_create'),
+    path('dashboard/classrooms/<int:classroom_id>/', views.classroom_detail, name='classroom_detail'),
+    path('dashboard/classrooms/<int:classroom_id>/import-students/', views.classroom_import_students, name='classroom_import_students'),
+    
+    path('dashboard/semesters/', views.semester_list, name='semester_list'),
+    path('dashboard/semesters/create/', views.semester_create, name='semester_create'),
+    path('dashboard/semesters/<int:semester_id>/update/', views.semester_update, name='semester_update'),
+    path('dashboard/semesters/<int:semester_id>/toggle-status/', views.semester_toggle_status, name='semester_toggle_status'),
+    path('dashboard/semesters/<int:semester_id>/delete/', views.semester_delete, name='semester_delete'),
+    
+    path('dashboard/assignments/', views.teacher_assignment_list, name='teacher_assignment_list'),
+    path('dashboard/assignments/create/', views.teacher_assignment_create, name='teacher_assignment_create'),
+    
+    # Teacher URLs
+    path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
+    path('teacher/profile/', views.teacher_profile, name='teacher_profile'),
+    path('teacher/change-password/', views.teacher_change_password, name='teacher_change_password'),
+    path('teacher/assignments/<int:assignment_id>/grades/', views.class_grades, name='class_grades'),
+    path('teacher/assignments/<int:assignment_id>/students/', views.teacher_class_students, name='teacher_class_students'),
+    path('teacher/update-grade/', views.update_grade, name='update_grade'),
+    path('teacher/delete-grade/', views.delete_grade, name='delete_grade'),
+    path('teacher/grade-history/', views.grade_history, name='grade_history'),
+    path('teacher/assignments/<int:assignment_id>/manage-grade-types/', views.manage_grade_types, name='manage_grade_types'),
+    path('teacher/assignments/<int:assignment_id>/bulk-update/', views.bulk_update_grades, name='bulk_update_grades'),
+    path('teacher/assignments/<int:assignment_id>/upload/', views.upload_grades, name='upload_grades'),
+] 

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Hệ thống quản lý điểm{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">
+    <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+</h1>
+
+<div class="row">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chalkboard-teacher fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Giáo viên</h5>
+                <p class="h2">{{ teachers.count }}</p>
+                <a href="{% url 'teacher_list' %}" class="btn btn-primary btn-sm mt-2">
+                    Quản lý giáo viên
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-book fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Môn học</h5>
+                <p class="h2">{{ subjects.count|default_if_none:"0" }}</p>
+                <a href="{% url 'subject_list' %}" class="btn btn-success btn-sm mt-2">
+                    Quản lý môn học
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-school fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Lớp học</h5>
+                <p class="h2">{{ classrooms.count|default_if_none:"0" }}</p>
+                <a href="{% url 'classroom_list' %}" class="btn btn-info btn-sm mt-2">
+                    Quản lý lớp học
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-alt fa-3x text-danger mb-3"></i>
+                <h5 class="card-title">Học kỳ</h5>
+                <p class="h2">{{ semesters.count|default_if_none:"0" }}</p>
+                <a href="{% url 'semester_list' %}" class="btn btn-danger btn-sm mt-2">
+                    Quản lý học kỳ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card border-warning mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-tasks fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Phân công giảng dạy</h5>
+                <p class="h2">{{ assignments.count|default_if_none:"0" }}</p>
+                <a href="{% url 'teacher_assignment_list' %}" class="btn btn-warning mt-2">
+                    Quản lý phân công
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Giáo viên gần đây</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tên tài khoản</th>
+                                <th>Họ tên</th>
+                                <th>Số điện thoại</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for teacher in teachers|slice:":5" %}
+                            <tr>
+                                <td>{{ teacher.user.username }}</td>
+                                <td>{{ teacher.user.get_full_name }}</td>
+                                <td>{{ teacher.phone|default:"-" }}</td>
+                                <td>
+                                    {% if teacher.is_active %}
+                                    <span class="badge bg-success">Hoạt động</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Bị khóa</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'teacher_detail' teacher.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">Chưa có giáo viên nào.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if teachers.count > 5 %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'teacher_list' %}" class="btn btn-primary">
+                        Xem tất cả giáo viên
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

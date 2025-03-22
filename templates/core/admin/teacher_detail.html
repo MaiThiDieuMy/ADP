@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Chi tiết giáo viên: {{ teacher.user.get_full_name }} - Hệ thống Quản lý Điểm Sinh viên{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4>
+                <i class="fas fa-user-tie"></i>
+                Thông tin giáo viên: {{ teacher.user.get_full_name }}
+                {% if teacher.is_active %}
+                <span class="badge bg-success">Đang hoạt động</span>
+                {% else %}
+                <span class="badge bg-danger">Bị khóa</span>
+                {% endif %}
+            </h4>
+            <div>
+                <a href="{% url 'teacher_list' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+                <a href="{% url 'update_teacher' teacher.id %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </a>
+                <a href="{% url 'teacher_toggle_status' teacher.id %}" class="btn btn-warning btn-sm">
+                    {% if teacher.is_active %}
+                    <i class="fas fa-lock"></i> Khóa tài khoản
+                    {% else %}
+                    <i class="fas fa-lock-open"></i> Mở khóa
+                    {% endif %}
+                </a>
+                <a href="{% url 'teacher_reset_password' teacher.id %}" class="btn btn-info btn-sm">
+                    <i class="fas fa-key"></i> Đặt lại mật khẩu
+                </a>
+                <a href="{% url 'teacher_delete' teacher.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa giáo viên này không?');">
+                    <i class="fas fa-trash"></i> Xóa
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table">
+                        <tr>
+                            <th width="30%">ID:</th>
+                            <td>{{ teacher.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tên đăng nhập:</th>
+                            <td>{{ teacher.user.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>Họ và tên:</th>
+                            <td>{{ teacher.user.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ teacher.user.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Số điện thoại:</th>
+                            <td>{{ teacher.phone|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Ngày tham gia:</th>
+                            <td>{{ teacher.user.date_joined|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Lần đăng nhập cuối:</th>
+                            <td>{{ teacher.user.last_login|date:"d/m/Y H:i"|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher assignments -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-chalkboard-teacher"></i> Phân công giảng dạy</h5>
+        </div>
+        <div class="card-body">
+            {% if teacher_assignments %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Môn học</th>
+                            <th>Lớp</th>
+                            <th>Học kỳ</th>
+                            <th>Ngày phân công</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in teacher_assignments %}
+                        <tr>
+                            <td>{{ assignment.id }}</td>
+                            <td>{{ assignment.subject.name }}</td>
+                            <td>{{ assignment.classroom.name }}</td>
+                            <td>{{ assignment.semester.name }}</td>
+                            <td>{{ assignment.created_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Giáo viên này chưa được phân công giảng dạy.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

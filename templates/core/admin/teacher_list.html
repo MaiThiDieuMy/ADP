@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý Giáo viên - Hệ thống Quản lý Điểm Sinh viên{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4><i class="fas fa-user-tie"></i> Danh sách giáo viên</h4>
+            <div>
+                <a href="{% url 'teacher_create' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Thêm giáo viên
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if teachers %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Họ và tên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for teacher in teachers %}
+                        <tr>
+                            <td>{{ teacher.id }}</td>
+                            <td>{{ teacher.user.username }}</td>
+                            <td>{{ teacher.user.get_full_name }}</td>
+                            <td>{{ teacher.user.email }}</td>
+                            <td>{{ teacher.phone|default:"-" }}</td>
+                            <td>
+                                {% if teacher.is_active %}
+                                <span class="badge bg-success">Đang hoạt động</span>
+                                {% else %}
+                                <span class="badge bg-danger">Bị khóa</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'teacher_detail' teacher.id %}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'update_teacher' teacher.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'teacher_toggle_status' teacher.id %}" class="btn btn-warning btn-sm">
+                                        {% if teacher.is_active %}
+                                        <i class="fas fa-lock"></i>
+                                        {% else %}
+                                        <i class="fas fa-lock-open"></i>
+                                        {% endif %}
+                                    </a>
+                                    <a href="{% url 'teacher_reset_password' teacher.id %}" class="btn btn-secondary btn-sm">
+                                        <i class="fas fa-key"></i>
+                                    </a>
+                                    <a href="{% url 'teacher_delete' teacher.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa giáo viên này không?');">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Chưa có giáo viên nào trong hệ thống.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

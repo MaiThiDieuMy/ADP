@@ -1,0 +1,755 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Quản lý điểm lớp {{ assignment.classroom.name }} - {{ assignment.subject.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .edit-indicator {
+        position: relative;
+        z-index: 100;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .input-group {
+        position: relative;
+    }
+    td {
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fas fa-graduation-cap me-2"></i>Quản lý điểm: {{ assignment.subject.name }} - {{ assignment.classroom.name }}
+            </h4>
+            <div>
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+                <a href="{% url 'teacher_class_students' assignment.id %}" class="btn btn-outline-light btn-sm ms-1">
+                    <i class="fas fa-users me-1"></i>Danh sách SV
+                </a>
+                <a href="{% url 'manage_grade_types' assignment.id %}" class="btn btn-outline-light btn-sm ms-1">
+                    <i class="fas fa-list-alt me-1"></i>Quản lý loại điểm
+                </a>
+                <a href="{% url 'bulk_update_grades' assignment.id %}" class="btn btn-outline-light btn-sm ms-1">
+                    <i class="fas fa-users-cog me-1"></i>Cập nhật hàng loạt
+                </a>
+                <a href="{% url 'upload_grades' assignment.id %}" class="btn btn-outline-light btn-sm ms-1">
+                    <i class="fas fa-file-upload me-1"></i>Tải lên từ Excel
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="mb-4">
+                <h5>Thông tin:</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Lớp:</strong> {{ assignment.classroom.name }}</p>
+                        <p><strong>Môn học:</strong> {{ assignment.subject.name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Học kỳ:</strong> {{ assignment.semester.name }}</p>
+                        <p><strong>Giáo viên:</strong> {{ assignment.teacher.user.get_full_name }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã SV</th>
+                                <th>Họ tên</th>
+                                {% for grade_type in grade_types %}
+                                    <th>{{ grade_type.name }}</th>
+                                {% endfor %}
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                                <tr>
+                                    <td>{{ student.student_id }}</td>
+                                    <td>{{ student.name }}</td>
+                                    {% for grade_type in grade_types %}
+                                        <td>
+                                            {% with student_grade=student_grades|get_item:student.id|get_item:'grades'|get_item:grade_type.id %}
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" 
+                                                           class="form-control grade-input" 
+                                                           min="0" 
+                                                           max="10" 
+                                                           step="0.1" 
+                                                           value="{{ student_grade.value }}"
+                                                           data-student-id="{{ student.id }}"
+                                                           data-grade-type-id="{{ grade_type.id }}"
+                                                           data-grade-id="{{ student_grade.id|default_if_none:'' }}"
+                                                           data-original-value="{{ student_grade.value }}"
+                                                           data-version="1"
+                                                           readonly
+                                                    >
+                                                    <button class="btn btn-warning btn-edit-grade" type="button" title="Sửa điểm">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-primary btn-save-grade" type="button" style="display: none;">
+                                                        <i class="fas fa-save"></i>
+                                                    </button>
+                                                    {% if student_grade.id %}
+                                                    <button class="btn btn-danger btn-delete-grade" type="button" title="Xóa điểm"
+                                                            data-student-id="{{ student.id }}"
+                                                            data-grade-type-id="{{ grade_type.id }}">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            {% endwith %}
+                                        </td>
+                                    {% endfor %}
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-history" data-student-id="{{ student.id }}">
+                                            <i class="fas fa-history"></i> Lịch sử
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Không có sinh viên nào trong lớp này.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal for grade history -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lịch sử điểm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="history-content">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xóa điểm</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa điểm này không?</p>
+                <p>Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        console.log("Page initialized, setting up grade inputs");
+        
+        // Cache key prefix for stored grades
+        const GRADE_CACHE_PREFIX = 'grade_cache_{{ assignment.id }}_';
+        
+        // Function to save a grade value to localStorage
+        function cacheGradeValue(studentId, gradeTypeId, value) {
+            const cacheKey = GRADE_CACHE_PREFIX + studentId + '_' + gradeTypeId;
+            localStorage.setItem(cacheKey, value);
+            console.log("Cached grade value:", cacheKey, value);
+        }
+        
+        // Function to retrieve a cached grade value
+        function getCachedGradeValue(studentId, gradeTypeId) {
+            const cacheKey = GRADE_CACHE_PREFIX + studentId + '_' + gradeTypeId;
+            return localStorage.getItem(cacheKey);
+        }
+        
+        // Force display of all values on page load - first use DB values, then fallback to cache
+        setTimeout(function() {
+            console.log("Running initial force refresh of all grade values");
+            
+            // First, make sure all values from the HTML are properly loaded
+            document.querySelectorAll('.grade-input').forEach(function(inputElement) {
+                const value = inputElement.value;
+                const originalValue = inputElement.getAttribute('data-original-value');
+                const studentId = inputElement.getAttribute('data-student-id');
+                const gradeTypeId = inputElement.getAttribute('data-grade-type-id');
+                
+                console.log(`Input initial check: student=${studentId}, gradeType=${gradeTypeId}, value=${value}, originalValue=${originalValue}`);
+                
+                // If there's a value attribute but the input is empty, force the value
+                if (originalValue && originalValue !== '' && (!value || value === '')) {
+                    console.log(`Forcing value from attribute: ${originalValue}`);
+                    inputElement.value = originalValue;
+                    
+                    // Cache this value
+                    cacheGradeValue(studentId, gradeTypeId, originalValue);
+                }
+                
+                // Also force the value from cache if needed
+                if ((!value || value === '') && (!originalValue || originalValue === '')) {
+                    const cachedValue = getCachedGradeValue(studentId, gradeTypeId);
+                    if (cachedValue && cachedValue !== '') {
+                        console.log(`Forcing value from cache: ${cachedValue}`);
+                        inputElement.value = cachedValue;
+                    }
+                }
+            });
+        }, 300);
+        
+        // Helper function to refresh all grade inputs (can be called at any time)
+        function refreshGradeInputs() {
+            $('.grade-input').each(function() {
+                const input = $(this);
+                const inputElement = this; // Direct DOM reference
+                const studentId = input.data('student-id');
+                const gradeTypeId = input.data('grade-type-id');
+                const originalValue = input.attr('data-original-value');
+                
+                // Skip if this input is currently being edited
+                if (inputElement.readOnly === false || $(this).hasClass('border-warning')) {
+                    console.log("Skipping refresh for input being edited");
+                    return;
+                }
+                
+                // First check the data attribute (DB value)
+                if (originalValue && originalValue !== '' && (inputElement.value === '' || inputElement.value === null)) {
+                    console.log("Restoring missing value from data attribute:", originalValue);
+                    // Use direct DOM manipulation for more reliable updates
+                    inputElement.value = originalValue;
+                    
+                    // Cache this value
+                    cacheGradeValue(studentId, gradeTypeId, originalValue);
+                } 
+                // Then try the cache if no data attribute
+                else if ((!originalValue || originalValue === '') && (inputElement.value === '' || inputElement.value === null)) {
+                    const cachedValue = getCachedGradeValue(studentId, gradeTypeId);
+                    if (cachedValue && cachedValue !== '') {
+                        console.log("Restoring missing value from cache:", cachedValue);
+                        inputElement.value = cachedValue;
+                    }
+                }
+                
+                // Make sure all inputs are readonly unless being edited
+                inputElement.readOnly = true;
+                
+                // Make sure delete button is visible if there's a value
+                const inputGroup = input.closest('.input-group');
+                if (inputElement.value !== '' && inputGroup.find('.btn-delete-grade').length === 0) {
+                    // Create delete button if it doesn't exist
+                    const deleteButton = $('<button class="btn btn-danger btn-delete-grade" type="button" title="Xóa điểm" data-student-id="' + 
+                        studentId + '" data-grade-type-id="' + gradeTypeId + 
+                        '"><i class="fas fa-trash"></i></button>');
+                    
+                    // Add after the save button
+                    const saveButton = inputGroup.find('.btn-save-grade');
+                    saveButton.after(deleteButton);
+                }
+            });
+        }
+        
+        // Initialize all grade inputs to ensure data attributes are synchronized with displayed values
+        $('.grade-input').each(function() {
+            const input = $(this);
+            const value = input.val();
+            const gradeId = input.attr('data-grade-id');
+            const originalValue = input.attr('data-original-value');
+            
+            console.log("Input initialization:", {
+                gradeId: gradeId,
+                originalValue: originalValue,
+                currentValue: value
+            });
+            
+            // Make sure data attributes and data() values are in sync
+            if (gradeId) {
+                input.data('grade-id', gradeId);
+            }
+            
+            if (originalValue) {
+                input.data('original-value', originalValue);
+                // Double check that value is displayed properly
+                if (input.val() === '' || input.val() === null) {
+                    input.val(originalValue);
+                }
+            }
+            
+            // Ensure input is readonly
+            input.prop('readonly', true);
+            
+            // Make sure input is visually correct with initial values
+            input.trigger('change');
+        });
+        
+        // Handle the edit button click
+        $(document).on('click', '.btn-edit-grade', function() {
+            const button = $(this);
+            const input = button.prev('.grade-input');
+            const inputElement = input[0]; // Direct DOM reference
+            const saveButton = button.next('.btn-save-grade');
+            
+            // Disable other edit buttons to prevent multiple edits
+            $('.btn-edit-grade').not(button).prop('disabled', true);
+            
+            // Enable editing with direct DOM manipulation
+            inputElement.readOnly = false;
+            inputElement.disabled = false; // Ensure it's not disabled
+            input.removeClass('bg-success text-white'); // Remove any lingering success styling
+            inputElement.focus();
+            
+            // Show save button and ensure it's enabled
+            saveButton.show();
+            saveButton.prop('disabled', false);
+            
+            // Highlight that the input is being edited
+            input.addClass('border-warning bg-light');
+            
+            // Add a message to indicate active editing
+            const inputGroup = button.closest('.input-group');
+            
+            // Remove any existing indicators first (to avoid duplicates)
+            inputGroup.nextAll('.edit-indicator').remove();
+            
+            // Create a clearly visible edit indicator with important styling
+            const editIndicator = $('<div class="edit-indicator alert alert-success py-1 mt-2 mb-0" style="font-size: 14px; clear: both; display: block; width: 100%;"><i class="fas fa-edit me-1"></i> <strong>Đang chỉnh sửa</strong></div>');
+            
+            // Add after the input group
+            inputGroup.after(editIndicator);
+        });
+        
+        // Show/hide save button when grade input changes
+        $(document).on('input change focusout', '.grade-input', function() {
+            const input = $(this);
+            const originalValue = input.attr('data-original-value') || '';
+            const currentValue = input.val() || '';
+            const saveButton = input.closest('.input-group').find('.btn-save-grade');
+            
+            console.log("Input changed:", {
+                currentValue: currentValue,
+                originalValue: originalValue,
+                isReadOnly: input.prop('readonly')
+            });
+            
+            // Make save button visible when input value changes and is not readonly
+            if (!input.prop('readonly')) {
+                saveButton.show();
+                saveButton.prop('disabled', false);
+            } else {
+                saveButton.hide();
+            }
+        });
+        
+        // Attach event to delete buttons using delegated event handling
+        $(document).on('click', '.btn-delete-grade', showDeleteConfirmation);
+        
+        // Save grade when button is clicked
+        $(document).on('click', '.btn-save-grade', function() {
+            const button = $(this);
+            const inputGroup = button.closest('.input-group');
+            const input = inputGroup.find('.grade-input');
+            const editButton = inputGroup.find('.btn-edit-grade');
+            const studentId = input.data('student-id');
+            const gradeTypeId = input.data('grade-type-id');
+            const gradeId = input.data('grade-id');
+            const value = input.val();
+            
+            // Validate input
+            if (value === '') {
+                alert('Vui lòng nhập điểm');
+                return;
+            }
+            
+            const numValue = parseFloat(value);
+            if (isNaN(numValue) || numValue < 0 || numValue > 10) {
+                alert('Điểm phải là số từ 0 đến 10');
+                return;
+            }
+            
+            // Disable input and button while saving
+            input.prop('disabled', true);
+            button.prop('disabled', true);
+            editButton.prop('disabled', true);
+            button.html('<span class="spinner-border spinner-border-sm"></span>');
+            
+            // Simple variable to track if save was successful
+            let saveSuccess = false;
+            
+            // Send AJAX request to update grade
+            $.ajax({
+                url: '{% url "update_grade" %}',
+                type: 'POST',
+                data: {
+                    'student_id': studentId,
+                    'assignment_id': {{ assignment.id }},
+                    'grade_type_id': gradeTypeId,
+                    'grade_id': gradeId,
+                    'value': value,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        saveSuccess = true;
+                        console.log("Grade saved successfully:", response);
+                        
+                        try {
+                            // Cache the value for persistence
+                            cacheGradeValue(response.student_id, response.grade_type_id, response.value);
+                            
+                            // Simple direct updates
+                            const inputElement = input[0];
+                            inputElement.value = response.value;
+                            input.attr('data-grade-id', response.grade_id);
+                            input.attr('data-original-value', response.value);
+                            
+                            // Make input readonly and show success
+                            inputElement.readOnly = true;
+                            input.removeClass('border-warning bg-light');
+                            input.addClass('bg-success text-white');
+                            
+                            // Remove editing indicator - make sure to remove all instances
+                            inputGroup.nextAll('.edit-indicator').remove();
+                            
+                            // Show success indication
+                            button.removeClass('btn-primary').addClass('btn-success');
+                            button.html('<i class="fas fa-check"></i>');
+                            
+                            // Add delete button if needed
+                            if (inputGroup.find('.btn-delete-grade').length === 0) {
+                                const deleteButton = $('<button class="btn btn-danger btn-delete-grade" type="button" title="Xóa điểm" data-student-id="' + 
+                                    response.student_id + '" data-grade-type-id="' + response.grade_type_id + '"><i class="fas fa-trash"></i></button>');
+                                
+                                button.after(deleteButton);
+                            }
+                        } catch (e) {
+                            console.error("Error updating UI after save:", e);
+                            // Still mark as success, we'll handle UI in the complete handler
+                        }
+                    } else {
+                        alert('Lỗi: ' + response.error);
+                        button.removeClass('btn-primary').addClass('btn-danger');
+                        button.html('<i class="fas fa-times"></i>');
+                    }
+                },
+                error: function() {
+                    alert('Đã xảy ra lỗi khi lưu điểm.');
+                    button.removeClass('btn-primary').addClass('btn-danger');
+                    button.html('<i class="fas fa-times"></i>');
+                },
+                complete: function() {
+                    console.log("AJAX complete, save successful:", saveSuccess);
+                    
+                    // Common cleanup regardless of success/failure
+                    // Re-enable edit buttons and remove editing indicators
+                    $('.btn-edit-grade').prop('disabled', false);
+                    input.prop('disabled', false);
+                    inputGroup.nextAll('.edit-indicator').remove();
+                    
+                    if (saveSuccess) {
+                        // Hide save button with slight delay to show success first
+                        setTimeout(function() {
+                            button.hide();
+                            button.removeClass('btn-success').addClass('btn-primary');
+                            button.html('<i class="fas fa-save"></i>');
+                            
+                            // Remove the success highlighting after a moment
+                            setTimeout(function() {
+                                input.removeClass('bg-success text-white');
+                            }, 2000);
+                        }, 1000);
+                    } else {
+                        // Reset buttons to normal state
+                        setTimeout(function() {
+                            button.removeClass('btn-danger').addClass('btn-primary');
+                            button.html('<i class="fas fa-save"></i>');
+                        }, 2000);
+                    }
+                }
+            });
+        });
+        
+        // Delete grade
+        function showDeleteConfirmation() {
+            const button = $(this);
+            const studentId = button.data('student-id');
+            const gradeTypeId = button.data('grade-type-id');
+            
+            // Store the clicked button to use it later
+            $('#confirmDeleteModal').data('button', button);
+            
+            // Show confirmation modal
+            $('#confirmDeleteModal').modal('show');
+        }
+        
+        // Handle delete confirmation
+        $('#confirmDelete').on('click', function() {
+            const modal = $('#confirmDeleteModal');
+            const button = modal.data('button');
+            const studentId = button.data('student-id');
+            const gradeTypeId = button.data('grade-type-id');
+            const inputGroup = button.closest('.input-group');
+            const input = inputGroup.find('.grade-input');
+            const inputElement = input[0]; // Direct DOM reference
+            const editButton = inputGroup.find('.btn-edit-grade');
+            
+            // Hide modal
+            modal.modal('hide');
+            
+            // Show loading state
+            button.prop('disabled', true);
+            editButton.prop('disabled', true);
+            button.html('<span class="spinner-border spinner-border-sm"></span>');
+            
+            // Variable to track deletion success
+            let deleteSuccess = false;
+            
+            // Send AJAX request to delete grade
+            $.ajax({
+                url: '{% url "delete_grade" %}',
+                type: 'POST',
+                data: {
+                    'student_id': studentId,
+                    'assignment_id': {{ assignment.id }},
+                    'grade_type_id': gradeTypeId,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        deleteSuccess = true;
+                        console.log("Grade deleted successfully");
+                        
+                        // Clear from localStorage cache
+                        const cacheKey = GRADE_CACHE_PREFIX + studentId + '_' + gradeTypeId;
+                        localStorage.removeItem(cacheKey);
+                        
+                        // Clear all values
+                        inputElement.value = '';
+                        input.attr('data-original-value', '');
+                        input.attr('data-grade-id', '');
+                        
+                        // Show deletion visually
+                        input.addClass('bg-danger text-white');
+                    } else {
+                        alert('Lỗi khi xóa điểm: ' + response.error);
+                        button.html('<i class="fas fa-trash"></i>');
+                    }
+                },
+                error: function() {
+                    alert('Đã xảy ra lỗi khi xóa điểm.');
+                    button.html('<i class="fas fa-trash"></i>');
+                },
+                complete: function() {
+                    // Re-enable edit button
+                    editButton.prop('disabled', false);
+                    
+                    // Ensure any edit indicators are removed
+                    inputGroup.nextAll('.edit-indicator').remove();
+                    
+                    if (deleteSuccess) {
+                        // Remove delete button
+                        button.remove();
+                        
+                        // Remove visual indication after a moment
+                        setTimeout(function() {
+                            input.removeClass('bg-danger text-white');
+                            
+                            // Ensure the input stays empty
+                            inputElement.value = '';
+                            
+                            // Hide any save buttons
+                            inputGroup.find('.btn-save-grade').hide();
+                        }, 2000);
+                    } else {
+                        // Re-enable button if error
+                        button.prop('disabled', false);
+                    }
+                }
+            });
+        });
+        
+        // View grade history
+        $(document).on('click', '.view-history', function() {
+            const studentId = $(this).data('student-id');
+            const modal = $('#historyModal');
+            
+            // Show modal and loading spinner
+            modal.modal('show');
+            
+            // Get grade history for this student
+            $.ajax({
+                url: '{% url "grade_history" %}',
+                type: 'GET',
+                data: {
+                    'student_id': studentId,
+                    'assignment_id': {{ assignment.id }}
+                },
+                success: function(response) {
+                    if (response.success && response.html) {
+                        $('#history-content').html(response.html);
+                    } else {
+                        $('#history-content').html('<div class="alert alert-info">Không có lịch sử điểm.</div>');
+                    }
+                },
+                error: function() {
+                    $('#history-content').html('<div class="alert alert-danger">Đã xảy ra lỗi khi tải lịch sử điểm.</div>');
+                }
+            });
+        });
+        
+        // Also ensure values are refreshed when inputs are focused
+        $(document).on('focus', '.grade-input', function() {
+            const input = $(this);
+            const inputElement = this;
+            const originalValue = input.attr('data-original-value');
+            
+            // If we have an original value but input is empty, restore it
+            if (originalValue && originalValue !== '' && (!inputElement.value || inputElement.value === '')) {
+                console.log("Focus event: Restoring value:", originalValue);
+                inputElement.value = originalValue;
+            }
+        });
+        
+        // Add a more robust initial load that waits for the DOM to fully stabilize
+        $(window).on('load', function() {
+            console.log("Window fully loaded, ensuring grade values are displayed");
+            
+            // Short delay to ensure the DOM is fully rendered
+            setTimeout(function() {
+                // Initial force refresh
+                forceSyncAllGradeValues();
+                
+                // Schedule follow-up checks (less frequent to avoid interference)
+                setTimeout(refreshGradeInputs, 3000);
+                
+                // Set up periodic refresh at reasonable intervals
+                // Less frequent to avoid interfering with user input
+                setInterval(refreshGradeInputs, 15000); // jQuery approach - every 15 seconds
+                setInterval(forceSyncAllGradeValues, 30000); // Direct DOM approach - every 30 seconds
+            }, 500);
+        });
+        
+        // Ultra-reliable function to force grade values to display
+        function forceSyncAllGradeValues() {
+            console.log("FORCE SYNC: Ensuring grade values are displayed");
+            document.querySelectorAll('.grade-input').forEach(function(inputElement) {
+                // Don't interfere with inputs that are currently being edited
+                if (inputElement.readOnly === false || inputElement.classList.contains('border-warning')) {
+                    console.log("Skipping sync for input that is being edited");
+                    return;
+                }
+                
+                // Get all relevant values directly from DOM
+                const studentId = inputElement.getAttribute('data-student-id');
+                const gradeTypeId = inputElement.getAttribute('data-grade-type-id');
+                const originalValue = inputElement.getAttribute('data-original-value');
+                const currentValue = inputElement.value;
+                
+                // First priority: use data-original-value (from server)
+                // Only update if we have a data value AND the current value is missing or different
+                if (originalValue && originalValue !== '') {
+                    if (!currentValue || currentValue === '' || currentValue !== originalValue) {
+                        console.log(`Restoring value from attribute: ${originalValue}`);
+                        inputElement.value = originalValue;
+                        
+                        // Also update cache
+                        cacheGradeValue(studentId, gradeTypeId, originalValue);
+                    }
+                } 
+                // Second priority: use localStorage cache if input is empty
+                else if (!currentValue || currentValue === '') {
+                    const cachedValue = getCachedGradeValue(studentId, gradeTypeId);
+                    if (cachedValue && cachedValue !== '') {
+                        console.log(`Restoring value from cache: ${cachedValue}`);
+                        inputElement.value = cachedValue;
+                    }
+                }
+                
+                // Ensure input is readonly (but only if not being edited)
+                if (!inputElement.classList.contains('border-warning')) {
+                    inputElement.readOnly = true;
+                }
+            });
+        }
+        
+        // Also run when visibility changes (user returns to tab)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                console.log("Tab became visible again, refreshing grade values");
+                forceSyncAllGradeValues();
+            }
+        });
+        
+        // Run initial force sync after the DOM is ready
+        setTimeout(forceSyncAllGradeValues, 1000);
+        
+        // Ensure 'Enter' key can be used to save grades
+        $(document).on('keydown', '.grade-input', function(e) {
+            if (e.key === 'Enter' && !$(this).prop('readonly')) {
+                e.preventDefault();
+                $(this).closest('.input-group').find('.btn-save-grade').click();
+            }
+        });
+
+        $(document).on('focusout', '.grade-input', function() {
+            // Only trigger save if the input is not readonly and has content
+            const input = $(this);
+            if (!input.prop('readonly') && input.val() !== '') {
+                console.log("Input lost focus, checking if save is needed");
+                
+                // Don't auto-save immediately, let user click save button or press Enter
+                // But ensure the save button is clearly visible
+                const saveButton = input.closest('.input-group').find('.btn-save-grade');
+                saveButton.show();
+                saveButton.prop('disabled', false);
+                
+                // Add visual reminder
+                if (!input.hasClass('border-warning')) {
+                    input.addClass('border-warning');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

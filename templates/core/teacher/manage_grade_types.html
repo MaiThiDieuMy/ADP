@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý Loại Điểm - {{ assignment.subject.name }} - {{ assignment.classroom.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fas fa-list-alt me-2"></i>Quản lý Loại Điểm: {{ assignment.subject.name }} - {{ assignment.classroom.name }}
+            </h4>
+            <div>
+                <a href="{% url 'class_grades' assignment.id %}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại Bảng Điểm
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Thêm Loại Điểm Mới</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" id="createGradeTypeForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="create">
+                                
+                                <div class="mb-3">
+                                    <label for="gradeName" class="form-label">Tên Loại Điểm</label>
+                                    <input type="text" class="form-control" id="gradeName" name="name" required 
+                                           placeholder="Ví dụ: Điểm miệng, Điểm 15p, Điểm cuối kỳ...">
+                                    <div class="form-text">Nhập tên loại điểm bạn muốn thêm.</div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-plus me-1"></i>Thêm Loại Điểm
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="mb-3"><i class="fas fa-list me-2"></i>Danh Sách Loại Điểm</h5>
+            
+            {% if grade_types %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th width="10%">#</th>
+                                <th>Tên Loại Điểm</th>
+                                <th width="30%">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade_type in grade_types %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ grade_type.name }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary edit-grade-type" 
+                                                data-id="{{ grade_type.id }}" 
+                                                data-name="{{ grade_type.name }}"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editGradeTypeModal">
+                                            <i class="fas fa-edit me-1"></i>Sửa
+                                        </button>
+                                        <button class="btn btn-sm btn-danger delete-grade-type" 
+                                                data-id="{{ grade_type.id }}" 
+                                                data-name="{{ grade_type.name }}"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteGradeTypeModal">
+                                            <i class="fas fa-trash me-1"></i>Xóa
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Chưa có loại điểm nào. Hãy thêm loại điểm mới để quản lý điểm số.
+                </div>
+            {% endif %}
+            
+            <div class="alert alert-warning mt-4">
+                <i class="fas fa-exclamation-triangle me-2"></i><strong>Lưu ý:</strong> Việc thêm, sửa hoặc xóa loại điểm sẽ ảnh hưởng đến tất cả các lớp trong hệ thống.
+                <ul class="mb-0 mt-2">
+                    <li>Khi xóa một loại điểm, tất cả các điểm số thuộc loại đó sẽ bị xóa.</li>
+                    <li>Khi đổi tên một loại điểm, tên mới sẽ được áp dụng cho tất cả các lớp.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Grade Type Modal -->
+<div class="modal fade" id="editGradeTypeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Chỉnh Sửa Loại Điểm</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" id="editGradeTypeForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="grade_type_id" id="editGradeTypeId">
+                
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editGradeName" class="form-label">Tên Loại Điểm</label>
+                        <input type="text" class="form-control" id="editGradeName" name="new_name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Grade Type Modal -->
+<div class="modal fade" id="deleteGradeTypeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xóa Loại Điểm</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa loại điểm <strong id="deleteGradeTypeName"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Lưu ý: Việc xóa loại điểm sẽ xóa tất cả các điểm số thuộc loại này. Hành động này không thể hoàn tác.
+                </div>
+            </div>
+            <form method="post" id="deleteGradeTypeForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="grade_type_id" id="deleteGradeTypeId">
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Set up edit grade type modal
+        $('.edit-grade-type').click(function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            
+            $('#editGradeTypeId').val(id);
+            $('#editGradeName').val(name);
+        });
+        
+        // Set up delete grade type modal
+        $('.delete-grade-type').click(function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            
+            $('#deleteGradeTypeId').val(id);
+            $('#deleteGradeTypeName').text(name);
+        });
+    });
+</script>
+{% endblock %}
+
+{% endblock %} 

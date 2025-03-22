@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Danh sách sinh viên lớp {{ assignment.classroom.name }} - {{ assignment.subject.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fas fa-users me-2"></i>Danh sách sinh viên: {{ assignment.classroom.name }}
+            </h4>
+            <div>
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại Dashboard
+                </a>
+                <a href="{% url 'class_grades' assignment.id %}" class="btn btn-outline-light btn-sm ms-1">
+                    <i class="fas fa-edit me-1"></i>Quản lý điểm
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="mb-4">
+                <h5>Thông tin:</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Lớp:</strong> {{ assignment.classroom.name }} ({{ assignment.classroom.class_code }})</p>
+                        <p><strong>Môn học:</strong> {{ assignment.subject.name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Học kỳ:</strong> {{ assignment.semester.name }}</p>
+                        <p><strong>Giáo viên:</strong> {{ assignment.teacher.user.get_full_name }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-primary">
+                        <tr>
+                            <th scope="col" width="10%">#</th>
+                            <th scope="col" width="20%">Mã sinh viên</th>
+                            <th scope="col">Họ và tên</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ student.student_id }}</td>
+                            <td>{{ student.name }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-3">
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>Không có sinh viên nào trong lớp này.
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-end mt-3">
+                <p><strong>Tổng số:</strong> {{ students|length }} sinh viên</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Trang chủ - Hệ thống quản lý điểm{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h1 class="h4 mb-0">Chào mừng đến với Hệ thống quản lý điểm</h1>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-graduation-cap fa-5x text-primary mb-3"></i>
+                    <h2>Quản lý điểm số học sinh dễ dàng và hiệu quả</h2>
+                    <p class="lead">Hệ thống giúp giáo viên quản lý điểm số, xem lịch sử điểm và xuất báo cáo</p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-edit fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Nhập điểm dễ dàng</h5>
+                                <p class="card-text">Nhập điểm trực tiếp hoặc nhập từ file Excel</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-history fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Lịch sử điểm số</h5>
+                                <p class="card-text">Theo dõi lịch sử thay đổi điểm của từng học sinh</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-export fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Xuất báo cáo</h5>
+                                <p class="card-text">Xuất báo cáo điểm số theo lớp, môn học</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if not user.is_authenticated %}
+                <div class="text-center">
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center">
+                    {% if user.is_superuser %}
+                    <a href="{% url 'admin_dashboard' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i> Đi đến Dashboard
+                    </a>
+                    {% elif user.teacher %}
+                    <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i> Đi đến Dashboard
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

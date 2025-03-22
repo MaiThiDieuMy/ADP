@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý Học kỳ - Hệ thống Quản lý Điểm Sinh viên{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Danh sách Học kỳ</h4>
+            <a href="{% url 'semester_create' %}" class="btn btn-light">
+                <i class="fas fa-plus-circle me-1"></i>Thêm Học kỳ
+            </a>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% if semesters %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên học kỳ</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Ngày kết thúc</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for semester in semesters %}
+                                <tr>
+                                    <td>{{ semester.id }}</td>
+                                    <td>{{ semester.name }}</td>
+                                    <td>{{ semester.start_date|date:"d/m/Y" }}</td>
+                                    <td>{{ semester.end_date|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% if semester.is_active %}
+                                            <span class="badge bg-success">Đang hoạt động</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Không hoạt động</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'semester_update' semester.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'semester_toggle_status' semester.id %}" class="btn btn-sm btn-outline-warning">
+                                                {% if semester.is_active %}
+                                                    <i class="fas fa-ban"></i>
+                                                {% else %}
+                                                    <i class="fas fa-check"></i>
+                                                {% endif %}
+                                            </a>
+                                            <a href="#" onclick="confirmDelete('{% url 'semester_delete' semester.id %}', '{{ semester.name }}')" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Chưa có học kỳ nào được tạo.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(url, name) {
+        if (confirm(`Bạn có chắc chắn muốn xóa học kỳ "${name}"?`)) {
+            window.location.href = url;
+        }
+    }
+</script>
+{% endblock %} 
