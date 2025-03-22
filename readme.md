@@ -106,12 +106,6 @@ Hệ thống quản lý điểm sinh viên là một ứng dụng web hiện đ�
 
 ## 🛠️ CÔNG NGHỆ SỬ DỤNG 
 
-- Frontend: React.js, Material-UI
-- Backend: Node.js, Express
-- Database: MongoDB
-- Authentication: JWT
-- File Upload: AWS S3
-- Email Service: SendGrid
 
 ## 📝 GHI CHÚ 
 
