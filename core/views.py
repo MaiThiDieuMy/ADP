@@ -524,76 +524,65 @@ def teacher_class_students(request, assignment_id):
 @user_passes_test(is_teacher)
 def update_grade(request):
     if request.method == 'POST':
-        student_id = request.POST.get('student_id')
-        assignment_id = request.POST.get('assignment_id')
-        grade_type_id = request.POST.get('grade_type_id')
-        value = request.POST.get('value')
-        
-        if not all([student_id, assignment_id, grade_type_id, value]):
-            return JsonResponse({'success': False, 'error': 'Missing required data'})
-        
         try:
-            value = float(value)
-            if value < 0 or value > 10:
-                return JsonResponse({'success': False, 'error': 'Điểm phải từ 0 đến 10'})
-        except ValueError:
-            return JsonResponse({'success': False, 'error': 'Điểm không hợp lệ'})
-        
-        student = get_object_or_404(Student, id=student_id)
-        assignment = get_object_or_404(TeacherAssignment, id=assignment_id)
-        grade_type = get_object_or_404(GradeType, id=grade_type_id)
-        
-        # Check if the teacher is authorized to update grades for this assignment
-        if assignment.teacher.user != request.user:
-            return JsonResponse({'success': False, 'error': 'Bạn không có quyền cập nhật điểm cho lớp này'})
-        
-        # Get or create grade
-        grade, created = Grade.objects.get_or_create(
-            student=student,
-            teacher_assignment=assignment,
-            grade_type=grade_type,
-            defaults={'value': value, 'last_modified_by': request.user}
-        )
-        
-        if not created:
-            # Record grade history
-            GradeHistory.objects.create(
-                grade=grade,
-                old_value=grade.value,
-                new_value=value,
-                modified_by=request.user,
-                action='update'
-            )
+            data = json.loads(request.body)
+            student_id = data.get('student_id')
+            grade_type_id = data.get('grade_type_id')
+            grade_id = data.get('grade_id')
+            new_value = data.get('value')
+            version = data.get('version')
+
+            student = get_object_or_404(Student, id=student_id)
+            grade_type = get_object_or_404(GradeType, id=grade_type_id)
+
+            if grade_id:
+                grade = get_object_or_404(Grade, id=grade_id)
+                if grade.value != new_value:
+                    # Record grade history
+                    GradeHistory.objects.create(
+                        grade=grade,
+                        old_value=grade.value,
+                        new_value=new_value,
+                        modified_by=request.user,
+                        action='update'
+                    )
+                    grade.value = new_value
+                    grade.last_modified_by = request.user
+                    grade.save()
+            else:
+                grade = Grade.objects.create(
+                    student=student,
+                    teacher_assignment=student.classroom.teacherassignment_set.get(teacher=request.user.teacher),
+                    grade_type=grade_type,
+                    value=new_value,
+                    last_modified_by=request.user
+                )
+                # Record grade history for new grade
+                GradeHistory.objects.create(
+                    grade=grade,
+                    new_value=new_value,
+                    modified_by=request.user,
+                    action='create'
+                )
+
+            # Calculate average grade
+            all_grades = Grade.objects.filter(
+                student=student,
+                teacher_assignment=grade.teacher_assignment
+            ).values_list('value', flat=True)
             
-            # Update grade
-            grade.value = value
-            grade.last_modified_by = request.user
-            grade.save()
-        else:
-            # Record creation in history
-            GradeHistory.objects.create(
-                grade=grade,
-                old_value=None,
-                new_value=value,
-                modified_by=request.user,
-                action='create'
-            )
-        
-        # Return more detailed information for client-side handling
-        # Convert to string format for consistency across client
-        string_value = str(grade.value)
-        
-        response_data = {
-            'success': True, 
-            'message': 'Điểm đã được cập nhật',
-            'grade_id': grade.id,
-            'value': string_value,
-            'student_id': student.id,
-            'grade_type_id': grade_type.id,
-            'created': created
-        }
-        return JsonResponse(response_data)
-    
+            average = sum(all_grades) / len(all_grades) if all_grades else None
+
+            return JsonResponse({
+                'success': True,
+                'grade_id': grade.id,
+                'version': version,
+                'average': round(average, 2) if average is not None else None
+            })
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
@@ -818,48 +807,46 @@ def manage_grade_types(request, assignment_id):
 @user_passes_test(is_teacher)
 def delete_grade(request):
     if request.method == 'POST':
-        student_id = request.POST.get('student_id')
-        assignment_id = request.POST.get('assignment_id')
-        grade_type_id = request.POST.get('grade_type_id')
-        
-        if not all([student_id, assignment_id, grade_type_id]):
-            return JsonResponse({'success': False, 'error': 'Thiếu thông tin bắt buộc'})
-        
         try:
+            data = json.loads(request.body)
+            student_id = data.get('student_id')
+            grade_type_id = data.get('grade_type_id')
+
             student = get_object_or_404(Student, id=student_id)
-            assignment = get_object_or_404(TeacherAssignment, id=assignment_id)
-            grade_type = get_object_or_404(GradeType, id=grade_type_id)
+            grade = get_object_or_404(
+                Grade,
+                student=student,
+                grade_type_id=grade_type_id,
+                teacher_assignment__teacher=request.user.teacher
+            )
+
+            # Record grade history before deletion
+            GradeHistory.objects.create(
+                grade=grade,
+                old_value=grade.value,
+                modified_by=request.user,
+                action='delete'
+            )
+
+            grade.delete()
+
+            # Calculate new average after deletion
+            remaining_grades = Grade.objects.filter(
+                student=student,
+                teacher_assignment=grade.teacher_assignment
+            ).values_list('value', flat=True)
             
-            # Check if the teacher is authorized
-            if assignment.teacher.user != request.user:
-                return JsonResponse({'success': False, 'error': 'Bạn không có quyền xóa điểm cho lớp này'})
-            
-            # Find and delete the grade
-            try:
-                grade = Grade.objects.get(
-                    student=student,
-                    teacher_assignment=assignment,
-                    grade_type=grade_type
-                )
-                
-                # Record deletion in history
-                GradeHistory.objects.create(
-                    grade=grade,
-                    old_value=grade.value,
-                    new_value=None,
-                    modified_by=request.user,
-                    action='delete'
-                )
-                
-                grade.delete()
-                return JsonResponse({'success': True})
-            except Grade.DoesNotExist:
-                return JsonResponse({'success': False, 'error': 'Điểm không tồn tại'})
-                
+            average = sum(remaining_grades) / len(remaining_grades) if remaining_grades else None
+
+            return JsonResponse({
+                'success': True,
+                'average': round(average, 2) if average is not None else None
+            })
+
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Phương thức không hợp lệ'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
 @user_passes_test(is_teacher)
@@ -988,4 +975,112 @@ def semester_delete(request, semester_id):
     semester_name = semester.name
     semester.delete()
     messages.success(request, f'Học kỳ "{semester_name}" đã được xóa.')
-    return redirect('semester_list') 
+    return redirect('semester_list')
+
+@login_required
+@user_passes_test(is_teacher)
+def update_grades(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            grades_data = data.get('grades', [])
+            
+            if not grades_data:
+                return JsonResponse({'success': False, 'error': 'Không có dữ liệu điểm để cập nhật'})
+            
+            # Get the first grade to verify teacher assignment
+            first_grade = grades_data[0]
+            student = get_object_or_404(Student, id=first_grade['student_id'])
+            assignment = get_object_or_404(
+                TeacherAssignment,
+                classroom=student.classroom,
+                teacher=request.user.teacher
+            )
+            
+            updated_grades = []
+            for grade_data in grades_data:
+                student_id = grade_data['student_id']
+                grade_type_id = grade_data['grade_type_id']
+                grade_id = grade_data['grade_id']
+                value = grade_data['value']
+                version = grade_data['version']
+                
+                # Skip empty values
+                if value == '':
+                    continue
+                
+                # Validate value
+                try:
+                    float_value = float(value)
+                    if float_value < 0 or float_value > 10:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'Điểm phải là số từ 0 đến 10'
+                        })
+                except ValueError:
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'Điểm không hợp lệ: {value}'
+                    })
+                
+                student = get_object_or_404(Student, id=student_id)
+                grade_type = get_object_or_404(GradeType, id=grade_type_id)
+                
+                if grade_id:
+                    grade = get_object_or_404(Grade, id=grade_id)
+                    if str(grade.value) != str(value):
+                        # Record grade history
+                        GradeHistory.objects.create(
+                            grade=grade,
+                            old_value=grade.value,
+                            new_value=value,
+                            modified_by=request.user,
+                            action='update'
+                        )
+                        grade.value = float_value
+                        grade.last_modified_by = request.user
+                        grade.save()
+                else:
+                    grade = Grade.objects.create(
+                        student=student,
+                        teacher_assignment=assignment,
+                        grade_type=grade_type,
+                        value=float_value,
+                        last_modified_by=request.user
+                    )
+                    # Record grade history for new grade
+                    GradeHistory.objects.create(
+                        grade=grade,
+                        new_value=value,
+                        modified_by=request.user,
+                        action='create'
+                    )
+                
+                updated_grades.append({
+                    'grade_type_id': grade_type_id,
+                    'grade_id': grade.id,
+                    'version': version
+                })
+            
+            # Calculate new average only if there are grades
+            if updated_grades:
+                all_grades = Grade.objects.filter(
+                    student=student,
+                    teacher_assignment=assignment
+                ).values_list('value', flat=True)
+                
+                valid_grades = [float(grade) for grade in all_grades if grade is not None]
+                average = sum(valid_grades) / len(valid_grades) if valid_grades else None
+            else:
+                average = None
+
+            return JsonResponse({
+                'success': True,
+                'grades': updated_grades,
+                'average': round(average, 2) if average is not None else None
+            })
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}) 
