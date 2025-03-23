@@ -2,107 +2,842 @@
 
 {% block title %}Dashboard - Hệ thống quản lý điểm{% endblock %}
 
-{% block content %}
-<h1 class="mb-4">
-    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-</h1>
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #1e3c72;
+        --primary-light: #2a5298;
+        --primary-dark: #152b52;
+        --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        --text-light: rgba(255,255,255,0.8);
+    }
 
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Danh sách lớp dạy</h5>
-            <div>
-                <form method="get" class="d-flex">
-                    {% if active_semesters.count > 1 %}
-                    <select name="semester" class="form-select me-2" onchange="this.form.submit()">
-                        <option value="">Tất cả học kỳ</option>
-                        {% for semester in active_semesters %}
-                        <option value="{{ semester.id }}" {% if request.GET.semester|add:"0" == semester.id %}selected{% endif %}>
-                            {{ semester.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    {% endif %}
-                    <div class="input-group">
-                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm môn học..." value="{{ search_query }}">
-                        <button type="submit" class="btn btn-outline-light">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="card-body">
-        {% if not active_semesters %}
-        <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle me-2"></i>Không có học kỳ nào đang hoạt động. Vui lòng liên hệ quản trị viên để kích hoạt học kỳ.
-        </div>
-        {% endif %}
+    /* Sidebar styles */
+    #sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100%;
+        width: 280px;
+        background: var(--primary-gradient);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        overflow-y: auto;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+    }
+
+    #sidebar.active {
+        left: 0;
+    }
+
+    .sidebar-header {
+        padding: 30px 20px;
+        background: var(--primary-dark);
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-header .user-avatar {
+        width: 90px;
+        height: 90px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid rgba(255,255,255,0.2);
+        transition: all 0.3s;
+    }
+
+    .sidebar-header .user-avatar:hover {
+        border-color: #3498db;
+        transform: scale(1.05);
+    }
+
+    .sidebar-header .user-info {
+        color: white;
+    }
+
+    .sidebar-header .user-info h6 {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    #sidebar .nav-link {
+        padding: 15px 25px;
+        color: var(--text-light);
+        border-left: 4px solid transparent;
+        transition: all 0.3s;
+        margin: 5px 0;
+        border-radius: 0 30px 30px 0;
+    }
+
+    #sidebar .nav-link:hover,
+    #sidebar .nav-link.active {
+        color: white;
+        background: rgba(255,255,255,0.1);
+        border-left: 4px solid #fff;
+        transform: translateX(10px);
+    }
+
+    #sidebar .nav-link i {
+        width: 25px;
+        text-align: center;
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+
+    /* Toggle button */
+    #sidebarCollapse {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 999;
+        border: none;
+        background: var(--primary-color);
+        padding: 12px 15px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    #sidebarCollapse:hover {
+        background: var(--primary-light);
+        transform: scale(1.1);
+    }
+
+    /* Main content */
+    #content {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-left: 0;
+        padding: 30px;
+        padding-top: 110px;
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    #content.active {
+        margin-left: 280px;
+    }
+
+    /* Cards styling */
+    .card {
+        border: 1px solid rgba(30, 60, 114, 0.1);
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        border-radius: 15px 15px 0 0 !important;
+        border-bottom: 2px solid rgba(30, 60, 114, 0.1);
+    }
+
+    /* Stats cards */
+    .stats-card {
+        border-radius: 20px;
+        overflow: hidden;
+        min-height: 200px;
+        background: #1e3c72 !important;
+        cursor: pointer;
+    }
+
+    .stats-card .card-body {
+        padding: 35px;
+        height: 100%;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    }
+
+    .stats-card h6.text-uppercase {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: rgba(255, 255, 255, 0.9);
+        letter-spacing: 0.5px;
+    }
+
+    .stats-card h2.mb-0 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-card i.fa-3x {
+        font-size: 4.5rem;
+        color: white;
+        opacity: 0.8;
+    }
+
+    .stats-card .d-flex {
+        height: 100%;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(30, 60, 114, 0.2);
+    }
+
+    .stats-card:hover i {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 1;
+    }
+
+    .stats-card::after {
+        content: 'Nhấn để xem chi tiết';
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(255,255,255,0.7);
+        font-size: 0.8rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .stats-card:hover::after {
+        opacity: 1;
+    }
+
+    /* Table styling */
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        color: var(--primary-color);
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .btn {
+        border-radius: 8px;
+        padding: 8px 16px;
+        transition: all 0.3s;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Profile section */
+    .profile-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        background: rgba(52, 152, 219, 0.1);
+        transition: all 0.3s;
+    }
+
+    .profile-icon:hover {
+        transform: scale(1.1);
+        background: rgba(52, 152, 219, 0.2);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        #content.active {
+            margin-left: 0;
+        }
         
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Lớp</th>
-                        <th>Môn học</th>
-                        <th>Học kỳ</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for assignment in assignments %}
-                    <tr>
-                        <td>{{ assignment.classroom.name }}</td>
-                        <td>{{ assignment.subject.name }}</td>
-                        <td>{{ assignment.semester.name }}</td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="{% url 'class_grades' assignment.id %}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-edit me-1"></i> Quản lý điểm
-                                </a>
-                                <a href="{% url 'teacher_class_students' assignment.id %}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-users me-1"></i> Danh sách SV
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center">Không tìm thấy lớp dạy nào.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+        #sidebar {
+            margin-left: -280px;
+        }
+        
+        #sidebar.active {
+            margin-left: 0;
+        }
 
-{% if teacher %}
-<div class="card">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Thông tin cá nhân</h5>
+        .card-header {
+            flex-direction: column;
+        }
+
+        .card-header form {
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .stats-card {
+            min-height: 180px;
+        }
+
+        .stats-card h6.text-uppercase {
+            font-size: 1.2rem;
+        }
+
+        .stats-card h2.mb-0 {
+            font-size: 3rem;
+        }
+
+        .stats-card i.fa-3x {
+            font-size: 3.5rem;
+        }
+    }
+
+    /* Custom scrollbar for sidebar */
+    #sidebar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    #sidebar::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.1);
+    }
+
+    #sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.2);
+        border-radius: 3px;
+    }
+
+    #sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    /* Stats cards */
+    .col-md-4:nth-child(1) .card {
+        background: var(--primary-gradient);
+    }
+
+    .col-md-4:nth-child(2) .card {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #3a6fc9 100%);
+    }
+
+    .col-md-4:nth-child(3) .card {
+        background: linear-gradient(135deg, #3a6fc9 0%, var(--primary-color) 100%);
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-light);
+        border-color: var(--primary-light);
+    }
+
+    .btn-info {
+        background: var(--primary-light);
+        border-color: var(--primary-light);
+    }
+
+    /* Text colors */
+    .text-primary {
+        color: var(--primary-color) !important;
+    }
+
+    /* Badge */
+    .badge.bg-primary {
+        background: var(--primary-color) !important;
+    }
+
+    /* Profile icons */
+    .profile-icon i,
+    .bg-light i.text-primary {
+        color: var(--primary-color) !important;
+    }
+
+    /* Table hover */
+    .table-hover tbody tr:hover {
+        background-color: rgba(30, 60, 114, 0.05);
+    }
+
+    /* Card headers */
+    .card-header.bg-white {
+        border-bottom: 2px solid rgba(30, 60, 114, 0.1);
+    }
+
+    /* Form elements */
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.25);
+    }
+
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.25);
+    }
+
+    /* Profile section icons */
+    .bg-light.p-3 {
+        background: rgba(30, 60, 114, 0.1) !important;
+    }
+
+    .bg-light.p-3:hover {
+        background: rgba(30, 60, 114, 0.15) !important;
+    }
+
+    /* Overlay color */
+    .overlay.active {
+        background: rgba(30, 60, 114, 0.7);
+    }
+
+    /* Additional hover effects */
+    .btn-primary:hover {
+        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+    }
+
+    .stats-card:hover {
+        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.2);
+    }
+
+    /* Alert modifications */
+    .alert-warning {
+        border-left: 4px solid var(--primary-color);
+    }
+
+    /* Search button in header */
+    .input-group .btn-primary {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .input-group .btn-primary:hover {
+        background: var(--primary-light);
+        border-color: var(--primary-light);
+    }
+
+    /* Dropdown menu */
+    .dropdown-item:active,
+    .dropdown-item:focus {
+        background-color: var(--primary-color);
+    }
+
+    /* Active nav indication */
+    .nav-link.active {
+        position: relative;
+    }
+
+    .nav-link.active::after {
+        content: '';
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #fff;
+    }
+
+    /* Style cho navbar duy nhất */
+    .main-navbar {
+        background: #1e3c72;
+        background: linear-gradient(to right, #1e3c72, #2a5298);
+        padding: 0 2rem;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        height: 90px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Container cho navbar */
+    .navbar-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        height: 100%;
+    }
+
+    /* Style cho phần bên trái (toggle button) */
+    #sidebarCollapse {
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    #sidebarCollapse:hover {
+        transform: scale(1.1);
+    }
+
+    #sidebarCollapse i {
+        font-size: 1.8rem;
+    }
+
+    /* Style cho tiêu đề trung tâm */
+    .navbar-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .nav-title {
+        color: white;
+        font-family: 'Segoe UI', 'Open Sans', sans-serif;
+        font-size: 1.7rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .main-navbar {
+            height: 80px;
+            padding: 0.8rem 1rem;
+        }
+
+        .nav-title {
+            font-size: 1.4rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Navbar duy nhất -->
+<nav class="main-navbar">
+    <div class="navbar-container">
+        <div class="navbar-left">
+            <button id="sidebarCollapse">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <div class="navbar-center">
+            <span class="nav-title">Hệ Thống Quản Lý Điểm</span>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>Tên đăng nhập:</strong> {{ teacher.user.username }}</p>
-                <p><strong>Họ tên:</strong> {{ teacher.user.get_full_name }}</p>
+</nav>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+    <div class="sidebar-header">
+        <div class="user-avatar">
+            <i class="fas fa-user fa-2x text-white"></i>
+        </div>
+        <div class="user-info">
+            <h6 class="mb-1">{{ teacher.user.get_full_name }}</h6>
+            <small class="text-muted">Giáo viên</small>
+        </div>
+    </div>
+
+    <ul class="nav flex-column mt-3">
+        <li class="nav-item">
+            <a href="{% url 'teacher_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i>
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link" onclick="showGradeManagement()">
+                <i class="fas fa-book"></i>
+                Quản lý điểm
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link" onclick="showClassList()">
+                <i class="fas fa-users"></i>
+                Danh sách lớp
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_profile' %}" class="nav-link">
+                <i class="fas fa-user-circle"></i>
+                Thông tin cá nhân
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_change_password' %}" class="nav-link">
+                <i class="fas fa-key"></i>
+                Đổi mật khẩu
+            </a>
+        </li>
+        <li class="nav-item mt-4">
+            <a href="{% url 'logout' %}" class="nav-link text-danger">
+                <i class="fas fa-sign-out-alt"></i>
+                Đăng xuất
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Overlay -->
+<div class="overlay"></div>
+
+<!-- Main Content -->
+<div id="content">
+    <div class="container-fluid">
+        <!-- Quick Stats Section -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-4">
+                <div class="card stats-card" onclick="showClassDetails()">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase mb-2">Tổng số lớp</h6>
+                                <h2 class="mb-0">{{ assignments.count }}</h2>
+                            </div>
+                            <i class="fas fa-chalkboard"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6">
-                <p><strong>Email:</strong> {{ teacher.user.email|default:"-" }}</p>
-                <p><strong>Số điện thoại:</strong> {{ teacher.phone|default:"-" }}</p>
+            <div class="col-md-4 mb-4">
+                <div class="card stats-card" onclick="showSemesterDetails()">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase mb-2">Học kỳ hiện tại</h6>
+                                <h2 class="mb-0">{{ active_semesters.count }}</h2>
+                            </div>
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card stats-card" onclick="showSubjectDetails()">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-uppercase mb-2">Môn học</h6>
+                                <h2 class="mb-0">{{ assignments|length }}</h2>
+                            </div>
+                            <i class="fas fa-book"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="mt-3">
-            <a href="{% url 'teacher_profile' %}" class="btn btn-primary">
-                <i class="fas fa-user-edit me-1"></i> Cập nhật thông tin
-            </a>
-            <a href="{% url 'teacher_change_password' %}" class="btn btn-secondary">
-                <i class="fas fa-key me-1"></i> Đổi mật khẩu
-            </a>
+
+        <!-- Class List Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-primary fw-bold">
+                        <i class="fas fa-list me-2"></i>Danh sách lớp dạy
+                    </h5>
+                    <form method="get" class="d-flex gap-2">
+                        {% if active_semesters.count > 1 %}
+                        <select name="semester" class="form-select" style="width: auto;" onchange="this.form.submit()">
+                            <option value="">Tất cả học kỳ</option>
+                            {% for semester in active_semesters %}
+                            <option value="{{ semester.id }}" {% if request.GET.semester|add:"0" == semester.id %}selected{% endif %}>
+                                {{ semester.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm môn học..." value="{{ search_query }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if not active_semesters %}
+                <div class="alert alert-warning m-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Không có học kỳ nào đang hoạt động.
+                </div>
+                {% endif %}
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="px-4">Lớp</th>
+                                <th>Môn học</th>
+                                <th>Học kỳ</th>
+                                <th class="text-end px-4">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in assignments %}
+                            <tr>
+                                <td class="px-4">
+                                    <strong>{{ assignment.classroom.name }}</strong>
+                                </td>
+                                <td>{{ assignment.subject.name }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ assignment.semester.name }}</span>
+                                </td>
+                                <td class="text-end px-4">
+                                    <a href="{% url 'class_grades' assignment.id %}" class="btn btn-primary btn-sm me-1">
+                                        <i class="fas fa-edit"></i>
+                                        <span class="d-none d-md-inline ms-1">Quản lý điểm</span>
+                                    </a>
+                                    <a href="{% url 'teacher_class_students' assignment.id %}" class="btn btn-info btn-sm text-white">
+                                        <i class="fas fa-users"></i>
+                                        <span class="d-none d-md-inline ms-1">Danh sách SV</span>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                    Không tìm thấy lớp dạy nào.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const content = document.getElementById('content');
+    const sidebarCollapse = document.getElementById('sidebarCollapse');
+    const overlay = document.querySelector('.overlay');
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('active');
+        content.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
+
+    sidebarCollapse.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', toggleSidebar);
+
+    // Close sidebar on mobile when clicking a nav link
+    const navLinks = document.querySelectorAll('#sidebar .nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
+    });
+
+    // Close sidebar when window is resized
+    window.addEventListener('resize', function() {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
+    });
+});
+
+function showGradeManagement() {
+    // Lấy assignment đầu tiên từ danh sách (nếu có)
+    {% if assignments %}
+        {% with first_assignment=assignments|first %}
+            window.location.href = "{% url 'class_grades' first_assignment.id %}";
+        {% endwith %}
+    {% else %}
+        alert('Không có lớp học nào được phân công.');
+    {% endif %}
+}
+
+function showClassDetails() {
+    // Chuyển đến trang danh sách lớp
+    window.location.href = "{% url 'teacher_class_students' assignments.0.id %}";
+}
+
+function showSemesterDetails() {
+    // Chuyển đến trang quản lý điểm của học kỳ hiện tại
+    {% if active_semesters %}
+        {% with first_assignment=assignments|first %}
+            window.location.href = "{% url 'class_grades' first_assignment.id %}";
+        {% endwith %}
+    {% else %}
+        alert('Không có học kỳ nào đang hoạt động.');
+    {% endif %}
+}
+
+function showSubjectDetails() {
+    // Chuyển đến trang quản lý điểm
+    {% if assignments %}
+        {% with first_assignment=assignments|first %}
+            window.location.href = "{% url 'class_grades' first_assignment.id %}";
+        {% endwith %}
+    {% else %}
+        alert('Không có môn học nào được phân công.');
+    {% endif %}
+}
+
+function showClassList() {
+    {% if assignments %}
+        {% with first_assignment=assignments|first %}
+            window.location.href = "{% url 'teacher_class_students' first_assignment.id %}";
+        {% endwith %}
+    {% else %}
+        alert('Không có lớp học nào được phân công.');
+    {% endif %}
+}
+
+// Thêm hiệu ứng ripple khi click
+document.querySelectorAll('.stats-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+        let ripple = document.createElement('div');
+        ripple.className = 'ripple';
+        this.appendChild(ripple);
+        
+        let rect = this.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        
+        setTimeout(() => {
+            ripple.remove();
+        }, 1000);
+    });
+});
+</script>
+
+<!-- Thêm style cho hiệu ứng ripple -->
+<style>
+    .stats-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ripple {
+        position: absolute;
+        background: rgba(255,255,255,0.3);
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        pointer-events: none;
+    }
+
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+</style>
 {% endblock %} 
