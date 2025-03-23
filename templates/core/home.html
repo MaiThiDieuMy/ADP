@@ -2,71 +2,360 @@
 
 {% block title %}Trang chủ - Hệ thống quản lý điểm{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Hide navigation bar */
+    .navbar {
+        display: none !important;
+    }
+
+    /* Adjust main content padding */
+    main {
+        padding-top: 0 !important;
+    }
+
+    :root {
+        --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        --secondary-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+        --accent-color: #ff6b6b;
+        --login-gradient: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+    }
+
+    .hero-section {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 6rem 0;
+        margin-bottom: 4rem;
+        border-radius: 0 0 3rem 3rem;
+        box-shadow: 0 4px 30px rgba(0,0,0,0.15);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.1;
+        animation: slide 20s linear infinite;
+    }
+
+    @keyframes slide {
+        from { background-position: 0 0; }
+        to { background-position: 100% 100%; }
+    }
+
+    .feature-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        position: relative;
+        z-index: 1;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--secondary-gradient);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: -1;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+
+    .feature-card:hover::before {
+        opacity: 0.05;
+    }
+
+    .feature-icon {
+        background: var(--primary-gradient);
+        color: white;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-icon::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: var(--secondary-gradient);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .feature-card:hover .feature-icon::after {
+        opacity: 0.3;
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+        padding: 1rem 2.5rem;
+        border-radius: 2.5rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.4);
+    }
+
+    .btn-light {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 1rem 2.5rem;
+        border-radius: 2.5rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    .btn-light:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+    }
+
+    .welcome-text {
+        animation: fadeInUp 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .feature-title {
+        color: #1e3c72;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        position: relative;
+        display: inline-block;
+    }
+
+    .feature-title::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 40px;
+        height: 3px;
+        background: var(--accent-color);
+        transition: width 0.4s ease;
+    }
+
+    .feature-card:hover .feature-title::after {
+        width: 100%;
+    }
+
+    .feature-description {
+        color: #666;
+        line-height: 1.8;
+        font-size: 1.1rem;
+        transition: color 0.4s ease;
+    }
+
+    .feature-card:hover .feature-description {
+        color: #444;
+    }
+
+    .hero-icon {
+        font-size: 5rem;
+        margin-bottom: 2rem;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .hero-subtitle {
+        font-size: 1.5rem;
+        font-weight: 300;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        .hero-subtitle {
+            font-size: 1.2rem;
+        }
+        .hero-section {
+            padding: 4rem 0;
+        }
+    }
+
+    .btn-login {
+        background: var(--login-gradient);
+        color: white;
+        border: none;
+        padding: 1.2rem 3rem;
+        border-radius: 3rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+
+    .btn-login::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+        );
+        transition: 0.5s;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+        color: white;
+    }
+
+    .btn-login:hover::before {
+        left: 100%;
+    }
+
+    .btn-login i {
+        margin-right: 10px;
+        transition: transform 0.3s ease;
+    }
+
+    .btn-login:hover i {
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h1 class="h4 mb-0">Chào mừng đến với Hệ thống quản lý điểm</h1>
-            </div>
-            <div class="card-body">
-                <div class="text-center mb-4">
-                    <i class="fas fa-graduation-cap fa-5x text-primary mb-3"></i>
-                    <h2>Quản lý điểm số học sinh dễ dàng và hiệu quả</h2>
-                    <p class="lead">Hệ thống giúp giáo viên quản lý điểm số, xem lịch sử điểm và xuất báo cáo</p>
-                </div>
-
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-edit fa-3x text-primary mb-3"></i>
-                                <h5 class="card-title">Nhập điểm dễ dàng</h5>
-                                <p class="card-text">Nhập điểm trực tiếp hoặc nhập từ file Excel</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-history fa-3x text-primary mb-3"></i>
-                                <h5 class="card-title">Lịch sử điểm số</h5>
-                                <p class="card-text">Theo dõi lịch sử thay đổi điểm của từng học sinh</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-file-export fa-3x text-primary mb-3"></i>
-                                <h5 class="card-title">Xuất báo cáo</h5>
-                                <p class="card-text">Xuất báo cáo điểm số theo lớp, môn học</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {% if not user.is_authenticated %}
-                <div class="text-center">
-                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
-                        <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập
-                    </a>
-                </div>
-                {% else %}
-                <div class="text-center">
-                    {% if user.is_superuser %}
-                    <a href="{% url 'admin_dashboard' %}" class="btn btn-primary btn-lg">
-                        <i class="fas fa-tachometer-alt me-2"></i> Đi đến Dashboard
-                    </a>
-                    {% elif user.teacher %}
-                    <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary btn-lg">
-                        <i class="fas fa-tachometer-alt me-2"></i> Đi đến Dashboard
+<div class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-md-8">
+                <div class="welcome-text">
+                    <i class="fas fa-graduation-cap hero-icon"></i>
+                    <h1 class="hero-title">CHÀO MỪNG ĐẾN VỚI HỆ THỐNG QUẢN LÝ ĐIỂM</h1>
+                    <p class="hero-subtitle">Quản lý điểm số học sinh một cách thông minh và hiệu quả</p>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="btn btn-login">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập ngay
                     </a>
                     {% endif %}
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
+</div>
+
+<div class="container">
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="feature-card h-100 p-5">
+                <div class="feature-icon">
+                    <i class="fas fa-edit fa-2x"></i>
+                </div>
+                <h3 class="feature-title">Nhập điểm dễ dàng</h3>
+                <p class="feature-description">Nhập điểm trực tiếp hoặc import từ file Excel với giao diện thân thiện và trực quan</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card h-100 p-5">
+                <div class="feature-icon">
+                    <i class="fas fa-history fa-2x"></i>
+                </div>
+                <h3 class="feature-title">Lịch sử điểm số</h3>
+                <p class="feature-description">Theo dõi và quản lý lịch sử thay đổi điểm của từng học sinh một cách chi tiết</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card h-100 p-5">
+                <div class="feature-icon">
+                    <i class="fas fa-file-export fa-2x"></i>
+                </div>
+                <h3 class="feature-title">Xuất báo cáo</h3>
+                <p class="feature-description">Tạo và xuất báo cáo điểm số theo lớp, môn học với nhiều định dạng tùy chọn</p>
+            </div>
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+    <div class="text-center mb-5">
+        {% if user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-tachometer-alt me-2"></i> Đi đến Dashboard
+        </a>
+        {% elif user.teacher %}
+        <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-tachometer-alt me-2"></i> Đi đến Dashboard
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %} 
