@@ -5,6 +5,515 @@
 
 {% block extra_css %}
 <style>
+    /* Copy all CSS styles from dashboard.html */
+    :root {
+        --primary-color: #1e3c72;
+        --primary-light: #2a5298;
+        --primary-dark: #152b52;
+        --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        --text-light: rgba(255,255,255,0.8);
+    }
+    /* Sidebar styles */
+    #sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100%;
+        width: 280px;
+        background: var(--primary-gradient);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        overflow-y: auto;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+    }
+
+    #sidebar.active {
+        left: 0;
+    }
+
+    .sidebar-header {
+        padding: 30px 20px;
+        background: var(--primary-dark);
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-header .user-avatar {
+        width: 90px;
+        height: 90px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid rgba(255,255,255,0.2);
+        transition: all 0.3s;
+    }
+
+    .sidebar-header .user-avatar:hover {
+        border-color: #3498db;
+        transform: scale(1.05);
+    }
+
+    .sidebar-header .user-info {
+        color: white;
+    }
+
+    .sidebar-header .user-info h6 {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    #sidebar .nav-link {
+        padding: 15px 25px;
+        color: var(--text-light);
+        border-left: 4px solid transparent;
+        transition: all 0.3s;
+        margin: 5px 0;
+        border-radius: 0 30px 30px 0;
+    }
+
+    #sidebar .nav-link:hover,
+    #sidebar .nav-link.active {
+        color: white;
+        background: rgba(255,255,255,0.1);
+        border-left: 4px solid #fff;
+        transform: translateX(10px);
+    }
+
+    #sidebar .nav-link i {
+        width: 25px;
+        text-align: center;
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+
+    /* Toggle button */
+    #sidebarCollapse {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 999;
+        border: none;
+        background: var(--primary-color);
+        padding: 12px 15px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    #sidebarCollapse:hover {
+        background: var(--primary-light);
+        transform: scale(1.1);
+    }
+
+    /* Main content */
+    #content {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-left: 0;
+        padding: 30px;
+        padding-top: 110px;
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    #content.active {
+        margin-left: 280px;
+    }
+
+    /* Cards styling */
+    .card {
+        border: 1px solid rgba(30, 60, 114, 0.1);
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        border-radius: 15px 15px 0 0 !important;
+        border-bottom: 2px solid rgba(30, 60, 114, 0.1);
+    }
+
+    /* Stats cards */
+    .stats-card {
+        border-radius: 20px;
+        overflow: hidden;
+        min-height: 200px;
+        background: #1e3c72 !important;
+        cursor: pointer;
+    }
+
+    .stats-card .card-body {
+        padding: 35px;
+        height: 100%;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    }
+
+    .stats-card h6.text-uppercase {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: rgba(255, 255, 255, 0.9);
+        letter-spacing: 0.5px;
+    }
+
+    .stats-card h2.mb-0 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-card i.fa-3x {
+        font-size: 4.5rem;
+        color: white;
+        opacity: 0.8;
+    }
+
+    .stats-card .d-flex {
+        height: 100%;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(30, 60, 114, 0.2);
+    }
+
+    .stats-card:hover i {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 1;
+    }
+
+    .stats-card::after {
+        content: 'Nhấn để xem chi tiết';
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(255,255,255,0.7);
+        font-size: 0.8rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .stats-card:hover::after {
+        opacity: 1;
+    }
+
+    /* Table styling */
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        color: var(--primary-color);
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .btn {
+        border-radius: 8px;
+        padding: 8px 16px;
+        transition: all 0.3s;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Profile section */
+    .profile-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        background: rgba(52, 152, 219, 0.1);
+        transition: all 0.3s;
+    }
+
+    .profile-icon:hover {
+        transform: scale(1.1);
+        background: rgba(52, 152, 219, 0.2);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        #content.active {
+            margin-left: 0;
+        }
+        
+        #sidebar {
+            margin-left: -280px;
+        }
+        
+        #sidebar.active {
+            margin-left: 0;
+        }
+
+        .card-header {
+            flex-direction: column;
+        }
+
+        .card-header form {
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .stats-card {
+            min-height: 180px;
+        }
+
+        .stats-card h6.text-uppercase {
+            font-size: 1.2rem;
+        }
+
+        .stats-card h2.mb-0 {
+            font-size: 3rem;
+        }
+
+        .stats-card i.fa-3x {
+            font-size: 3.5rem;
+        }
+    }
+
+    /* Custom scrollbar for sidebar */
+    #sidebar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    #sidebar::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.1);
+    }
+
+    #sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.2);
+        border-radius: 3px;
+    }
+
+    #sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    /* Stats cards */
+    .col-md-4:nth-child(1) .card {
+        background: var(--primary-gradient);
+    }
+
+    .col-md-4:nth-child(2) .card {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #3a6fc9 100%);
+    }
+
+    .col-md-4:nth-child(3) .card {
+        background: linear-gradient(135deg, #3a6fc9 0%, var(--primary-color) 100%);
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-light);
+        border-color: var(--primary-light);
+    }
+
+    .btn-info {
+        background: var(--primary-light);
+        border-color: var(--primary-light);
+    }
+
+    /* Text colors */
+    .text-primary {
+        color: var(--primary-color) !important;
+    }
+
+    /* Badge */
+    .badge.bg-primary {
+        background: var(--primary-color) !important;
+    }
+
+    /* Profile icons */
+    .profile-icon i,
+    .bg-light i.text-primary {
+        color: var(--primary-color) !important;
+    }
+
+    /* Table hover */
+    .table-hover tbody tr:hover {
+        background-color: rgba(30, 60, 114, 0.05);
+    }
+
+    /* Card headers */
+    .card-header.bg-white {
+        border-bottom: 2px solid rgba(30, 60, 114, 0.1);
+    }
+
+    /* Form elements */
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.25);
+    }
+
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.25);
+    }
+
+    /* Profile section icons */
+    .bg-light.p-3 {
+        background: rgba(30, 60, 114, 0.1) !important;
+    }
+
+    .bg-light.p-3:hover {
+        background: rgba(30, 60, 114, 0.15) !important;
+    }
+
+    /* Overlay color */
+    .overlay.active {
+        background: rgba(30, 60, 114, 0.7);
+    }
+
+    /* Additional hover effects */
+    .btn-primary:hover {
+        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+    }
+
+    .stats-card:hover {
+        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.2);
+    }
+
+    /* Alert modifications */
+    .alert-warning {
+        border-left: 4px solid var(--primary-color);
+    }
+
+    /* Search button in header */
+    .input-group .btn-primary {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .input-group .btn-primary:hover {
+        background: var(--primary-light);
+        border-color: var(--primary-light);
+    }
+
+    /* Dropdown menu */
+    .dropdown-item:active,
+    .dropdown-item:focus {
+        background-color: var(--primary-color);
+    }
+
+    /* Active nav indication */
+    .nav-link.active {
+        position: relative;
+    }
+
+    .nav-link.active::after {
+        content: '';
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #fff;
+    }
+
+    /* Style cho navbar duy nhất */
+    .main-navbar {
+        background: #1e3c72;
+        background: linear-gradient(to right, #1e3c72, #2a5298);
+        padding: 0 2rem;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        height: 90px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Container cho navbar */
+    .navbar-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        height: 100%;
+    }
+
+    /* Style cho phần bên trái (toggle button) */
+    #sidebarCollapse {
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    #sidebarCollapse:hover {
+        transform: scale(1.1);
+    }
+
+    #sidebarCollapse i {
+        font-size: 1.8rem;
+    }
+
+    /* Style cho tiêu đề trung tâm */
+    .navbar-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .nav-title {
+        color: white;
+        font-family: 'Segoe UI', 'Open Sans', sans-serif;
+        font-size: 1.7rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .main-navbar {
+            height: 80px;
+            padding: 0.8rem 1rem;
+        }
+
+        .nav-title {
+            font-size: 1.4rem;
+        }
+    }
+
+    /* Keep existing custom styles */
     .edit-indicator {
         position: relative;
         z-index: 100;
@@ -17,11 +526,11 @@
         position: relative;
     }
     .average-grade {
-        background-color: #e9ecef; /* Updated to match dashboard.html */
+        background-color: #f8f9fa;
         font-weight: bold;
     }
     .incomplete-grades {
-        color: #ff6b6b; /* Updated to match dashboard.html */
+        color: #dc3545;
         font-style: italic;
     }
     .alert-container {
@@ -65,120 +574,185 @@
         }
     }
 </style>
-</style>
 {% endblock %}
 
 {% block content %}
+<!-- Navbar duy nhất -->
+<nav class="main-navbar">
+    <div class="navbar-container">
+        <div class="navbar-left">
+            <button id="sidebarCollapse">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <div class="navbar-center">
+            <span class="nav-title">HỆ THỐNG QUẢN LÝ ĐIỂM</span>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+    <div class="sidebar-header">
+        <div class="user-avatar">
+            <i class="fas fa-user fa-2x text-white"></i>
+        </div>
+        <div class="user-info">
+            <h6 class="mb-1">{{ teacher.user.get_full_name }}</h6>
+            <small class="text-white">Giáo viên</small>
+        </div>
+    </div>
+
+    <ul class="nav flex-column mt-3">
+        <li class="nav-item">
+            <a href="{% url 'teacher_dashboard' %}" class="nav-link">
+                <i class="fas fa-tachometer-alt"></i>
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_profile' %}" class="nav-link">
+                <i class="fas fa-user-circle"></i>
+                Thông tin cá nhân
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_change_password' %}" class="nav-link">
+                <i class="fas fa-key"></i>
+                Đổi mật khẩu
+            </a>
+        </li>
+        <li class="nav-item mt-4">
+            <a href="{% url 'logout' %}" class="nav-link text-danger">
+                <i class="fas fa-sign-out-alt"></i>
+                Đăng xuất
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Overlay -->
+<div class="overlay"></div>
+
+<!-- Alert container -->
 <div class="alert-container"></div>
 
-<div class="container py-4">
-    <div class="card shadow">
-        <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">
-                <i class="fas fa-graduation-cap me-2"></i>Quản lý điểm: {{ assignment.subject.name }} - {{ assignment.classroom.name }}
-            </h4>
-            <div>
-                <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-light btn-sm">
-                    <i class="fas fa-arrow-left me-1"></i>Quay lại
-                </a>
-                <a href="{% url 'teacher_class_students' assignment.id %}" class="btn btn-outline-light btn-sm ms-1">
-                    <i class="fas fa-users me-1"></i>Danh sách SV
-                </a>
-                <a href="{% url 'manage_grade_types' assignment.id %}" class="btn btn-outline-light btn-sm ms-1">
-                    <i class="fas fa-list-alt me-1"></i>Quản lý loại điểm
-                </a>
-                <a href="{% url 'bulk_update_grades' assignment.id %}" class="btn btn-outline-light btn-sm ms-1">
-                    <i class="fas fa-users-cog me-1"></i>Cập nhật hàng loạt
-                </a>
-                <a href="{% url 'upload_grades' assignment.id %}" class="btn btn-outline-light btn-sm ms-1">
-                    <i class="fas fa-file-upload me-1"></i>Tải lên từ Excel
-                </a>
-            </div>
-        </div>
-        <div class="card-body">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-            
-            <div class="mb-4">
-                <h5>Thông tin:</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Lớp:</strong> {{ assignment.classroom.name }}</p>
-                        <p><strong>Môn học:</strong> {{ assignment.subject.name }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Học kỳ:</strong> {{ assignment.semester.name }}</p>
-                        <p><strong>Giáo viên:</strong> {{ assignment.teacher.user.get_full_name }}</p>
+<!-- Main Content -->
+<div id="content">
+    <div class="container-fluid">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0 text-primary fw-bold">
+                        <i class="fas fa-graduation-cap me-2"></i>Quản lý điểm: {{ assignment.subject.name }} - {{ assignment.classroom.name }}
+                    </h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Quay lại
+                        </a>
+                        <a href="{% url 'teacher_class_students' assignment.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-users me-1"></i>Danh sách SV
+                        </a>
+                        <a href="{% url 'manage_grade_types' assignment.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-list-alt me-1"></i>Quản lý loại điểm
+                        </a>
+                        <a href="{% url 'bulk_update_grades' assignment.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-users-cog me-1"></i>Cập nhật hàng loạt
+                        </a>
+                        <a href="{% url 'upload_grades' assignment.id %}" class="btn btn-primary btn-sm d-inline-flex align-items-center">
+                            <i class="fas fa-file-upload me-1"></i>
+                            <span>Tải lên Excel</span>
+                        </a>
                     </div>
                 </div>
             </div>
             
-            {% if students %}
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Mã SV</th>
-                                <th>Họ tên</th>
-                                {% for grade_type in grade_types %}
-                                    <th>{{ grade_type.name }}</th>
-                                {% endfor %}
-                                <th class="average-grade">Điểm TB</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for student in students %}
-                                <tr data-student-id="{{ student.id }}">
-                                    <td>{{ student.student_id }}</td>
-                                    <td>{{ student.name }}</td>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <div class="mb-4">
+                    <h5>Thông tin:</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Lớp:</strong> {{ assignment.classroom.name }}</p>
+                            <p><strong>Môn học:</strong> {{ assignment.subject.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Học kỳ:</strong> {{ assignment.semester.name }}</p>
+                            <p><strong>Giáo viên:</strong> {{ assignment.teacher.user.get_full_name }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if students %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã SV</th>
+                                    <th>Họ tên</th>
                                     {% for grade_type in grade_types %}
-                                        <td>
-                                            {% with student_grade=student_grades|get_item:student.id|get_item:'grades'|get_item:grade_type.id %}
-                                                <div class="input-group input-group-sm">
-                                                    <input type="number" 
-                                                           class="form-control grade-input" 
-                                                           min="0" 
-                                                           max="10" 
-                                                           step="0.1" 
-                                                           value="{{ student_grade.value }}"
-                                                           data-student-id="{{ student.id }}"
-                                                           data-grade-type-id="{{ grade_type.id }}"
-                                                           data-grade-id="{{ student_grade.id|default_if_none:'' }}"
-                                                           data-original-value="{{ student_grade.value }}"
-                                                           data-version="1"
-                                                    >
-                                                </div>
-                                            {% endwith %}
-                                        </td>
+                                        <th>{{ grade_type.name }}</th>
                                     {% endfor %}
-                                    <td class="average-grade">
-                                        <span class="average-value" data-student-id="{{ student.id }}">-</span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary btn-save-row">
-                                            <i class="fas fa-save"></i> Lưu
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary view-history" data-student-id="{{ student.id }}">
-                                            <i class="fas fa-history"></i> Lịch sử
-                                        </button>
-                                    </td>
+                                    <th class="average-grade">Điểm TB</th>
+                                    <th>Thao tác</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>Không có sinh viên nào trong lớp này.
-                </div>
-            {% endif %}
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                    <tr data-student-id="{{ student.id }}">
+                                        <td>{{ student.student_id }}</td>
+                                        <td>{{ student.name }}</td>
+                                        {% for grade_type in grade_types %}
+                                            <td>
+                                                {% with student_grade=student_grades|get_item:student.id|get_item:'grades'|get_item:grade_type.id %}
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="number" 
+                                                               class="form-control grade-input" 
+                                                               min="0" 
+                                                               max="10" 
+                                                               step="0.1" 
+                                                               value="{{ student_grade.value }}"
+                                                               data-student-id="{{ student.id }}"
+                                                               data-grade-type-id="{{ grade_type.id }}"
+                                                               data-grade-id="{{ student_grade.id|default_if_none:'' }}"
+                                                               data-original-value="{{ student_grade.value }}"
+                                                               data-version="1"
+                                                        >
+                                                    </div>
+                                                {% endwith %}
+                                            </td>
+                                        {% endfor %}
+                                        <td class="average-grade">
+                                            <span class="average-value" data-student-id="{{ student.id }}">-</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary btn-save-row">
+                                                <i class="fas fa-save"></i> Lưu
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary view-history" data-student-id="{{ student.id }}">
+                                                <i class="fas fa-history"></i> Lịch sử
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Không có sinh viên nào trong lớp này.
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
@@ -231,188 +805,220 @@
 
 {% block extra_js %}
 <script>
-    $(document).ready(function() {
-        // Function to calculate average grade
-        function calculateAverage(studentId) {
-            let total = 0;
-            let count = 0;
-            let requiredCount = $('.grade-input[data-student-id="' + studentId + '"]').length; // Tổng số cột điểm cần có
-            let hasAllGrades = true;
-            
-            // Get all grade inputs for this student
-            $(`input[data-student-id="${studentId}"]`).each(function() {
-                const value = $(this).val();
-                if (value !== '' && value !== null) {
-                    total += parseFloat(value);
-                    count++;
-                } else {
-                    hasAllGrades = false;
-                }
-            });
-            
-            // Update average display
-            const averageSpan = $(`.average-value[data-student-id="${studentId}"]`);
-            if (hasAllGrades && count === requiredCount && count > 0) {
-                const average = (total / count).toFixed(2);
-                averageSpan.text(average);
-                averageSpan.removeClass('incomplete-grades');
+document.addEventListener('DOMContentLoaded', function() {
+    // Add sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const content = document.getElementById('content');
+    const sidebarCollapse = document.getElementById('sidebarCollapse');
+    const overlay = document.querySelector('.overlay');
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('active');
+        content.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
+
+    sidebarCollapse.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', toggleSidebar);
+
+    // Close sidebar on mobile when clicking a nav link
+    const navLinks = document.querySelectorAll('#sidebar .nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
+    });
+
+    // Close sidebar when window is resized
+    window.addEventListener('resize', function() {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
+    });
+
+    // Function to calculate average grade
+    function calculateAverage(studentId) {
+        let total = 0;
+        let count = 0;
+        let requiredCount = $('.grade-input[data-student-id="' + studentId + '"]').length; // Tổng số cột điểm cần có
+        let hasAllGrades = true;
+        
+        // Get all grade inputs for this student
+        $(`input[data-student-id="${studentId}"]`).each(function() {
+            const value = $(this).val();
+            if (value !== '' && value !== null) {
+                total += parseFloat(value);
+                count++;
             } else {
-                averageSpan.text('Chưa đủ điểm');
-                averageSpan.addClass('incomplete-grades');
+                hasAllGrades = false;
+            }
+        });
+        
+        // Update average display
+        const averageSpan = $(`.average-value[data-student-id="${studentId}"]`);
+        if (hasAllGrades && count === requiredCount && count > 0) {
+            const average = (total / count).toFixed(2);
+            averageSpan.text(average);
+            averageSpan.removeClass('incomplete-grades');
+        } else {
+            averageSpan.text('Chưa đủ điểm');
+            averageSpan.addClass('incomplete-grades');
+        }
+    }
+
+    // Calculate initial averages
+    $('.grade-input').each(function() {
+        const studentId = $(this).data('student-id');
+        calculateAverage(studentId);
+    });
+
+    // Add event listener for input changes
+    $('.grade-input').on('input', function() {
+        const studentId = $(this).data('student-id');
+        calculateAverage(studentId);
+    });
+
+    // Function to show alert in top-right corner
+    function showAlert(message, type = 'success') {
+        const alertContainer = $('.alert-container');
+        const alert = $('<div>')
+            .addClass(`alert alert-${type} alert-dismissible fade show`)
+            .html(`
+                <i class="fas fa-check-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `);
+        
+        alertContainer.append(alert);
+        
+        // Auto dismiss after 3 seconds
+        setTimeout(() => {
+            alert.addClass('fade-out');
+            setTimeout(() => alert.remove(), 500);
+        }, 3000);
+    }
+
+    // Handle row saving
+    $('.btn-save-row').click(function() {
+        const row = $(this).closest('tr');
+        const studentId = row.data('student-id');
+        const saveBtn = $(this);
+        
+        // Show loading state
+        saveBtn.prop('disabled', true);
+        saveBtn.html('<span class="spinner-border spinner-border-sm"></span>');
+        
+        // Collect all grades in the row
+        const grades = [];
+        row.find('.grade-input').each(function() {
+            const input = $(this);
+            grades.push({
+                student_id: studentId,
+                grade_type_id: input.data('grade-type-id'),
+                grade_id: input.data('grade-id'),
+                value: input.val(),
+                version: input.data('version')
+            });
+        });
+        
+        // Send update request
+        fetch('/update-grades/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                grades: grades
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update grade IDs and versions
+                data.grades.forEach(updatedGrade => {
+                    const input = row.find(`input[data-grade-type-id="${updatedGrade.grade_type_id}"]`);
+                    input.data('grade-id', updatedGrade.grade_id);
+                    input.data('version', updatedGrade.version);
+                });
+                
+                // Update average
+                if (data.average !== null) {
+                    $(`.average-value[data-student-id="${studentId}"]`).text(data.average);
+                }
+                
+                // Show success message
+                showAlert('Đã cập nhật điểm thành công');
+            } else {
+                showAlert(data.error || 'Có lỗi xảy ra khi cập nhật điểm', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Có lỗi xảy ra khi cập nhật điểm', 'danger');
+        })
+        .finally(() => {
+            saveBtn.prop('disabled', false);
+            saveBtn.html('<i class="fas fa-save"></i> Lưu');
+        });
+    });
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
-
-        // Calculate initial averages
-        $('.grade-input').each(function() {
-            const studentId = $(this).data('student-id');
-            calculateAverage(studentId);
-        });
-
-        // Add event listener for input changes
-        $('.grade-input').on('input', function() {
-            const studentId = $(this).data('student-id');
-            calculateAverage(studentId);
-        });
-
-        // Function to show alert in top-right corner
-        function showAlert(message, type = 'success') {
-            const alertContainer = $('.alert-container');
-            const alert = $('<div>')
-                .addClass(`alert alert-${type} alert-dismissible fade show`)
-                .html(`
-                    <i class="fas fa-check-circle me-2"></i>${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `);
-            
-            alertContainer.append(alert);
-            
-            // Auto dismiss after 3 seconds
-            setTimeout(() => {
-                alert.addClass('fade-out');
-                setTimeout(() => alert.remove(), 500);
-            }, 3000);
-        }
-
-        // Handle row saving
-        $('.btn-save-row').click(function() {
-            const row = $(this).closest('tr');
-            const studentId = row.data('student-id');
-            const saveBtn = $(this);
-            
-            // Show loading state
-            saveBtn.prop('disabled', true);
-            saveBtn.html('<span class="spinner-border spinner-border-sm"></span>');
-            
-            // Collect all grades in the row
-            const grades = [];
-            row.find('.grade-input').each(function() {
-                const input = $(this);
-                grades.push({
-                    student_id: studentId,
-                    grade_type_id: input.data('grade-type-id'),
-                    grade_id: input.data('grade-id'),
-                    value: input.val(),
-                    version: input.data('version')
-                });
-            });
-            
-            // Send update request
-            fetch('/update-grades/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    grades: grades
-                })
-            })
+        return cookieValue;
+    }
+    
+    // View grade history
+    $('.view-history').click(function() {
+        const studentId = $(this).data('student-id');
+        const modal = $('#historyModal');
+        
+        // Show loading state in modal
+        modal.find('#history-content').html(`
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+            </div>
+        `);
+        
+        modal.modal('show');
+        
+        // Fetch grade history
+        fetch(`/grade-history/?student_id=${studentId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update grade IDs and versions
-                    data.grades.forEach(updatedGrade => {
-                        const input = row.find(`input[data-grade-type-id="${updatedGrade.grade_type_id}"]`);
-                        input.data('grade-id', updatedGrade.grade_id);
-                        input.data('version', updatedGrade.version);
-                    });
-                    
-                    // Update average
-                    if (data.average !== null) {
-                        $(`.average-value[data-student-id="${studentId}"]`).text(data.average);
-                    }
-                    
-                    // Show success message
-                    showAlert('Đã cập nhật điểm thành công');
+                    modal.find('#history-content').html(data.html);
                 } else {
-                    showAlert(data.error || 'Có lỗi xảy ra khi cập nhật điểm', 'danger');
+                    modal.find('#history-content').html(`
+                        <div class="alert alert-danger">
+                            ${data.error || 'Có lỗi xảy ra khi tải lịch sử điểm'}
+                        </div>
+                    `);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('Có lỗi xảy ra khi cập nhật điểm', 'danger');
-            })
-            .finally(() => {
-                saveBtn.prop('disabled', false);
-                saveBtn.html('<i class="fas fa-save"></i> Lưu');
-            });
-        });
-        
-        // Helper function to get CSRF token
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        
-        // View grade history
-        $('.view-history').click(function() {
-            const studentId = $(this).data('student-id');
-            const modal = $('#historyModal');
-            
-            // Show loading state in modal
-            modal.find('#history-content').html(`
-                <div class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Đang tải...</span>
+                modal.find('#history-content').html(`
+                    <div class="alert alert-danger">
+                        Có lỗi xảy ra khi tải lịch sử điểm
                     </div>
-                </div>
-            `);
-            
-            modal.modal('show');
-            
-            // Fetch grade history
-            fetch(`/grade-history/?student_id=${studentId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        modal.find('#history-content').html(data.html);
-                    } else {
-                        modal.find('#history-content').html(`
-                            <div class="alert alert-danger">
-                                ${data.error || 'Có lỗi xảy ra khi tải lịch sử điểm'}
-                            </div>
-                        `);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    modal.find('#history-content').html(`
-                        <div class="alert alert-danger">
-                            Có lỗi xảy ra khi tải lịch sử điểm
-                        </div>
-                    `);
-            });
+                `);
         });
     });
+});
 </script>
 {% endblock %} 
