@@ -2,68 +2,536 @@
 
 {% block title %}Thêm mới Phân công giảng dạy - Hệ thống Quản lý Điểm Sinh viên{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Hide navigation bar */
+    .navbar {
+        display: none !important;
+    }
+
+    /* Adjust main content padding */
+    main {
+        padding-top: 0 !important;
+    }
+
+    :root {
+        --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        --secondary-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+        --accent-gradient: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        --success-gradient: linear-gradient(45deg, #2ecc71, #27ae60);
+        --primary-color: #1e3c72;
+        --text-light: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Sidebar styles */
+    #sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100%;
+        width: 280px;
+        background: var(--primary-gradient);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        overflow-y: auto;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+    }
+
+    #sidebar.active {
+        left: 0;
+    }
+
+    .sidebar-header {
+        padding: 30px 20px;
+        background: rgba(0, 0, 0, 0.1);
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        position: relative;
+        margin-top: 0;
+    }
+
+    .sidebar-header .user-avatar {
+        width: 90px;
+        height: 90px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid rgba(255,255,255,0.2);
+        transition: all 0.3s;
+    }
+
+    .sidebar-header .user-info {
+        color: white;
+    }
+
+    .sidebar-header .user-info h6 {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    #sidebar .nav-link {
+        padding: 15px 25px;
+        color: var(--text-light);
+        border-left: 4px solid transparent;
+        transition: all 0.3s;
+        margin: 5px 0;
+        border-radius: 0 30px 30px 0;
+    }
+
+    #sidebar .nav-link:hover,
+    #sidebar .nav-link.active {
+        color: white;
+        background: rgba(255,255,255,0.1);
+        border-left: 4px solid #fff;
+        transform: translateX(10px);
+    }
+
+    #sidebar .nav-link i {
+        width: 25px;
+        text-align: center;
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+
+    /* Toggle button */
+    #sidebarCollapse {
+        position: fixed;
+        top: 35px;
+        left: 10px;
+        z-index: 999;
+        border: none;
+        background: var(--primary-gradient);
+        color: white;
+        padding: 12px 15px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.2);
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #sidebarCollapse:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(30, 60, 114, 0.3);
+    }
+
+    /* Close button */
+    .sidebar-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        color: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 1001;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-close:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+
+    /* Overlay */
+    .overlay {
+        display: none;
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 998;
+        opacity: 0;
+        transition: all 0.5s ease-in-out;
+    }
+
+    .overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+    /* Main content */
+    #content {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-left: 0;
+        padding: 20px;
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    #content.active {
+        margin-left: 280px;
+    }
+
+    /* Hero section */
+    .hero-section {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1.5rem 0;
+        margin-bottom: 1.5rem;
+        border-radius: 0 0 1.5rem 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        animation: float 3s ease-in-out infinite;
+        background: rgba(255, 255, 255, 0.1);
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 auto 0.5rem;
+        backdrop-filter: blur(5px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        animation: fadeInUp 1s ease-out;
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem;
+        opacity: 0;
+        animation: fadeInUp 1s ease-out forwards;
+        animation-delay: 0.3s;
+        font-weight: 300;
+    }
+
+    /* Form card */
+    .form-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+        max-width: 2000px;  /* Điều chỉnh chiều rộng tối đa */
+        margin: 2rem auto;  /* Căn giữa và thêm khoảng cách trên dưới */
+        #padding: 2rem;      /* Thêm padding xung quanh */
+    }
+
+    .card-body {
+        padding: 1.5rem 1.5rem;  /* Tăng padding bên trong để form không bị sát lề */
+    }
+
+    /* Form group - điều chỉnh khoảng cách giữa các trường */
+    .form-group {
+        margin-bottom: 1.5rem;
+        padding: 0 1rem;    /* Thêm padding trái phải */
+    }
+
+    /* Form controls - điều chỉnh kích thước các input */
+    .form-select,
+    .checkbox-container {
+        width: 95%;         /* Giảm chiều rộng một chút */
+        margin: 0 auto;     /* Căn giữa */
+    }
+
+    .form-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .form-card .card-header {
+        background: var(--primary-gradient);
+        border: none;
+        padding: 1.2rem;
+        color: white;
+    }
+
+    /* Form styles */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label i {
+        margin-right: 8px;
+        width: 20px;
+    }
+
+    .form-select {
+        width: 100%;
+        height: 45px;
+        padding: 8px 12px;
+        font-size: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        background-color: #fff;
+    }
+
+    .form-select:focus {
+        border-color: #4a69bd;
+        box-shadow: 0 0 0 0.2rem rgba(74, 105, 189, 0.15);
+    }
+
+    .checkbox-container {
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px;
+        max-height: 100px;
+        overflow-y: auto;
+        background-color: #fff;
+    }
+
+    .form-check {
+        padding: 4px 30px;
+        margin: 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .form-check:last-child {
+        border-bottom: none;
+    }
+
+    .form-check-input:checked {
+        background-color: #4a69bd;
+        border-color: #4a69bd;
+    }
+
+    /* Button styles */
+    .btn-light {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        color: #2c3e50;
+    }
+
+    .btn-light:hover {
+        background: #e9ecef;
+        border-color: #dee2e6;
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+        padding: 10px 24px;
+    }
+
+    .btn-primary:hover {
+        background: #3c5aa8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(74, 105, 189, 0.2);
+    }
+
+    /* Alert styles */
+    .alert {
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: none;
+    }
+
+    .alert-warning {
+        background: linear-gradient(135deg, #fff3cd, #ffeeba);
+        color: #856404;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4><i class="fas fa-chalkboard-teacher"></i> Thêm mới phân công giảng dạy</h4>
-            <div>
-                <a href="{% url 'teacher_assignment_list' %}" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-arrow-left"></i> Quay lại
-                </a>
+<!-- Sidebar Toggle Button -->
+<button id="sidebarCollapse">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+    <div class="sidebar-header">
+        <button type="button" class="sidebar-close" id="sidebarClose">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="user-avatar">
+            <i class="fas fa-user fa-2x text-white"></i>
+        </div>
+        <div class="user-info">
+            <h6 class="mb-1">{{ user.get_full_name }}</h6>
+            <small class="text-muted">Admin</small>
+        </div>
+    </div>
+
+    <ul class="nav flex-column mt-3">
+        <li class="nav-item">
+            <a href="{% url 'admin_dashboard' %}" class="nav-link">
+                <i class="fas fa-tachometer-alt"></i>
+                Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_list' %}" class="nav-link">
+                <i class="fas fa-user-tie"></i>
+                Giáo viên
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'subject_list' %}" class="nav-link">
+                <i class="fas fa-book"></i>
+                Môn học
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'classroom_list' %}" class="nav-link">
+                <i class="fas fa-chalkboard"></i>
+                Lớp học
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'semester_list' %}" class="nav-link">
+                <i class="fas fa-calendar-alt"></i>
+                Học kỳ
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_assignment_list' %}" class="nav-link active">
+                <i class="fas fa-tasks"></i>
+                Phân công
+            </a>
+        </li>
+        <li class="nav-item mt-4">
+            <a href="{% url 'logout' %}" class="nav-link text-danger">
+                <i class="fas fa-sign-out-alt"></i>
+                Đăng xuất
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Overlay -->
+<div class="overlay"></div>
+
+<!-- Main Content -->
+<div id="content">
+    <div class="container-fluid">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="container">
+                <div class="row justify-content-center text-center">
+                    <div class="col-md-8">
+                        <div class="hero-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h1 class="hero-title">THÊM MỚI PHÂN CÔNG GIẢNG DẠY</h1>
+                        <p class="hero-subtitle">Phân công giáo viên cho các lớp học</p>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="card-body">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-edit me-2"></i>
+                        <h5 class="mb-0">Thông tin phân công</h5>
                     </div>
-                {% endfor %}
-            {% endif %}
-            
-            {% if not semesters %}
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Chưa có học kỳ nào được tạo. 
-                    <a href="{% url 'semester_create' %}" class="alert-link">Nhấn vào đây</a> để tạo học kỳ trước khi phân công giảng dạy.
+                    <a href="{% url 'teacher_assignment_list' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-2"></i>Quay lại
+                    </a>
                 </div>
-            {% else %}
-            <form method="post" class="needs-validation" novalidate>
-                {% csrf_token %}
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
                 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="teacher">Giáo viên</label>
-                        <select class="form-select" id="teacher" name="teacher" required>
+                {% if not semesters %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Chưa có học kỳ nào được tạo. 
+                        <a href="{% url 'semester_create' %}" class="alert-link">Nhấn vào đây</a> để tạo học kỳ trước khi phân công giảng dạy.
+                    </div>
+                {% else %}
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Giáo viên -->
+                    <div class="form-group mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-user-tie"></i>
+                            Giáo viên
+                        </label>
+                        <select class="form-select" name="teacher" required>
                             <option value="">-- Chọn giáo viên --</option>
                             {% for teacher in teachers %}
                             <option value="{{ teacher.id }}">{{ teacher.user.get_full_name }} ({{ teacher.user.username }})</option>
                             {% endfor %}
                         </select>
-                        <div class="invalid-feedback">
-                            Vui lòng chọn giáo viên.
-                        </div>
                     </div>
-                    
-                    <div class="col-md-6">
-                        <label for="subject">Môn học</label>
-                        <select class="form-select" id="subject" name="subject" required>
+
+                    <!-- Môn học -->
+                    <div class="form-group mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-book"></i>
+                            Môn học
+                        </label>
+                        <select class="form-select" name="subject" required>
                             <option value="">-- Chọn môn học --</option>
                             {% for subject in subjects %}
                             <option value="{{ subject.id }}">{{ subject.name }}</option>
                             {% endfor %}
                         </select>
-                        <div class="invalid-feedback">
-                            Vui lòng chọn môn học.
-                        </div>
                     </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label>Lớp học (có thể chọn nhiều)</label>
-                        <div class="border p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+
+                    <!-- Lớp học -->
+                    <div class="form-group mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-chalkboard"></i>
+                            Lớp học (có thể chọn nhiều)
+                        </label>
+                        <div class="checkbox-container">
                             {% for classroom in classrooms %}
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="classrooms" value="{{ classroom.id }}" id="classroom_{{ classroom.id }}">
@@ -73,63 +541,83 @@
                             </div>
                             {% endfor %}
                         </div>
-                        <div class="invalid-feedback d-block" id="classroom-error" style="display: none;">
+                        <div class="text-danger small mt-1" id="classroom-error" style="display: none;">
                             Vui lòng chọn ít nhất một lớp học.
                         </div>
                     </div>
-                    
-                    <div class="col-md-6">
-                        <label for="semester">Học kỳ</label>
-                        <select class="form-select" id="semester" name="semester" required>
+
+                    <!-- Học kỳ -->
+                    <div class="form-group mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            Học kỳ
+                        </label>
+                        <select class="form-select" name="semester" required>
                             <option value="">-- Chọn học kỳ --</option>
                             {% for semester in semesters %}
                             <option value="{{ semester.id }}">{{ semester.name }}{% if semester.is_active %} (Đang hoạt động){% endif %}</option>
                             {% endfor %}
                         </select>
-                        <div class="invalid-feedback">
-                            Vui lòng chọn học kỳ.
-                        </div>
                     </div>
-                </div>
-                
-                <div class="d-flex justify-content-end mt-3">
-                    <button type="submit" class="btn btn-primary" id="submit-btn">
-                        <i class="fas fa-save"></i> Lưu phân công
-                    </button>
-                </div>
-            </form>
-            {% endif %}
+                    
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Lưu phân công
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Custom validation for checkbox group
-    document.querySelector('form').addEventListener('submit', function(event) {
-        let checkboxes = document.querySelectorAll('input[name="classrooms"]:checked');
-        if (checkboxes.length === 0) {
-            event.preventDefault();
-            document.getElementById('classroom-error').style.display = 'block';
-        } else {
-            document.getElementById('classroom-error').style.display = 'none';
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sidebar toggle functionality
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content');
+        const sidebarCollapse = document.getElementById('sidebarCollapse');
+        const sidebarClose = document.getElementById('sidebarClose');
+        const overlay = document.querySelector('.overlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            content.classList.toggle('active');
+            if (overlay) overlay.classList.toggle('active');
         }
+
+        if (sidebarCollapse) sidebarCollapse.addEventListener('click', toggleSidebar);
+        if (sidebarClose) sidebarClose.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+
+        // Custom validation for checkbox group
+        document.querySelector('form').addEventListener('submit', function(event) {
+            let checkboxes = document.querySelectorAll('input[name="classrooms"]:checked');
+            if (checkboxes.length === 0) {
+                event.preventDefault();
+                document.getElementById('classroom-error').style.display = 'block';
+            } else {
+                document.getElementById('classroom-error').style.display = 'none';
+            }
+        });
+        
+        // Bootstrap validation
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
     });
-    
-    // Bootstrap validation
-    (function() {
-        'use strict';
-        window.addEventListener('load', function() {
-            var forms = document.getElementsByClassName('needs-validation');
-            var validation = Array.prototype.filter.call(forms, function(form) {
-                form.addEventListener('submit', function(event) {
-                    if (form.checkValidity() === false) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-        }, false);
-    })();
 </script>
-{% endblock %} 
+{% endblock %}
