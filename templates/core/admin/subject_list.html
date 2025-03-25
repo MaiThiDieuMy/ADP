@@ -341,6 +341,42 @@
         from { background-position: 0 0; }
         to { background-position: 100% 100%; }
     }
+
+    /* Modal styles */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%; /* Could be more or less, depending on screen size */
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
 </style>
 {% endblock %}
 
@@ -467,10 +503,9 @@
                                         <a href="{% url 'subject_edit' subject.id %}" class="btn btn-info btn-sm">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'subject_delete' subject.id %}" class="btn btn-danger btn-sm" 
-                                           onclick="return confirm('Bạn có chắc chắn muốn xóa môn học này không?');">
+                                        <button class="btn btn-danger btn-sm" onclick="openModal('{{ subject.id }}', '{{ subject.name }}')">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -485,6 +520,20 @@
                 {% endif %}
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Modal for Delete Confirmation -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Xác nhận xóa môn học</h2>
+        <p>Bạn có chắc chắn muốn xóa môn học "<span id="subjectName"></span>" không?</p>
+        <form id="deleteForm" method="post" action="">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Xóa</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Hủy</button>
+        </form>
     </div>
 </div>
 
@@ -506,5 +555,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sidebarClose) sidebarClose.addEventListener('click', toggleSidebar);
     if (overlay) overlay.addEventListener('click', toggleSidebar);
 });
+
+// Modal functionality
+function openModal(subjectId, subjectName) {
+    document.getElementById('subjectName').innerText = subjectName;
+    document.getElementById('deleteForm').action = "{% url 'subject_delete' 0 %}".replace('0', subjectId);
+    document.getElementById('deleteModal').style.display = "block";
+}
+
+function closeModal() {
+    document.getElementById('deleteModal').style.display = "none";
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('deleteModal');
+    if (event.target == modal) {
+        closeModal();
+    }
+}
 </script>
 {% endblock %}
