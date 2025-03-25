@@ -821,23 +821,6 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebarCollapse.addEventListener('click', toggleSidebar);
     overlay.addEventListener('click', toggleSidebar);
 
-    // Close sidebar on mobile when clicking a nav link
-    const navLinks = document.querySelectorAll('#sidebar .nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                toggleSidebar();
-            }
-        });
-    });
-
-    // Close sidebar when window is resized
-    window.addEventListener('resize', function() {
-        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
-            toggleSidebar();
-        }
-    });
-
     // Function to calculate average grade
     function calculateAverage(studentId) {
         let total = 0;
@@ -849,8 +832,13 @@ document.addEventListener('DOMContentLoaded', function() {
         $(`input[data-student-id="${studentId}"]`).each(function() {
             const value = $(this).val();
             if (value !== '' && value !== null) {
-                total += parseFloat(value);
-                count++;
+                const gradeValue = parseFloat(value);
+                if (!isNaN(gradeValue) && gradeValue >= 0 && gradeValue <= 10) {
+                    total += gradeValue;
+                    count++;
+                } else {
+                    hasAllGrades = false;
+                }
             } else {
                 hasAllGrades = false;
             }
@@ -878,6 +866,23 @@ document.addEventListener('DOMContentLoaded', function() {
     $('.grade-input').on('input', function() {
         const studentId = $(this).data('student-id');
         calculateAverage(studentId);
+    });
+
+    // Close sidebar on mobile when clicking a nav link
+    const navLinks = document.querySelectorAll('#sidebar .nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
+    });
+
+    // Close sidebar when window is resized
+    window.addEventListener('resize', function() {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
     });
 
     // Function to show alert in top-right corner
@@ -943,10 +948,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.data('version', updatedGrade.version);
                 });
                 
-                // Update average
-                if (data.average !== null) {
-                    $(`.average-value[data-student-id="${studentId}"]`).text(data.average);
-                }
+                // Recalculate average after saving
+                calculateAverage(studentId);
                 
                 // Show success message
                 showAlert('Đã cập nhật điểm thành công');

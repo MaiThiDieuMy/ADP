@@ -854,17 +854,8 @@ def delete_grade(request):
 
             grade.delete()
 
-            # Calculate new average after deletion
-            remaining_grades = Grade.objects.filter(
-                student=student,
-                teacher_assignment=grade.teacher_assignment
-            ).values_list('value', flat=True)
-            
-            average = sum(remaining_grades) / len(remaining_grades) if remaining_grades else None
-
             return JsonResponse({
-                'success': True,
-                'average': round(average, 2) if average is not None else None
+                'success': True
             })
 
         except Exception as e:
@@ -1085,23 +1076,10 @@ def update_grades(request):
                     'grade_id': grade.id,
                     'version': version
                 })
-            
-            # Calculate new average only if there are grades
-            if updated_grades:
-                all_grades = Grade.objects.filter(
-                    student=student,
-                    teacher_assignment=assignment
-                ).values_list('value', flat=True)
-                
-                valid_grades = [float(grade) for grade in all_grades if grade is not None]
-                average = sum(valid_grades) / len(valid_grades) if valid_grades else None
-            else:
-                average = None
 
             return JsonResponse({
                 'success': True,
-                'grades': updated_grades,
-                'average': round(average, 2) if average is not None else None
+                'grades': updated_grades
             })
 
         except Exception as e:
