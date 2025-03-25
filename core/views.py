@@ -876,18 +876,14 @@ def manage_grade_types(request, assignment_id):
             if grade_type_id:
                 try:
                     grade_type = GradeType.objects.get(id=grade_type_id)
+                    grade_type_name = grade_type.name
                     
-                    # Check if this grade type is used in any grades
-                    if Grade.objects.filter(grade_type=grade_type, teacher_assignment=assignment).exists():
-                        messages.error(
-                            request, 
-                            f'Không thể xóa loại điểm "{grade_type.name}" vì đã có điểm số được nhập cho loại này. '
-                            f'Vui lòng xóa tất cả điểm số thuộc loại này trước.'
-                        )
-                    else:
-                        grade_type_name = grade_type.name
-                        grade_type.delete()
-                        messages.success(request, f'Đã xóa loại điểm "{grade_type_name}" thành công.')
+                    # Delete all associated grades first
+                    Grade.objects.filter(grade_type=grade_type, teacher_assignment=assignment).delete()
+                    
+                    # Then delete the grade type
+                    grade_type.delete()
+                    messages.success(request, f'Đã xóa loại điểm "{grade_type_name}" và tất cả điểm số liên quan thành công.')
                 except GradeType.DoesNotExist:
                     messages.error(request, 'Loại điểm không tồn tại.')
             else:

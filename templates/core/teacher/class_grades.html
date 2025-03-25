@@ -1156,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!formula) {
             customFormulaString = '';
             localStorage.setItem(`customFormula_${assignmentId}`, '');
-            alert('Công thức đã được đặt lại thành tính trung bình cộng.');
+            showAlert('Công thức đã được đặt lại thành tính trung bình cộng.');
             updateFormulaActiveIndicator();
             document.querySelectorAll('tr.student-row').forEach(row => {
                 calculateAverage(row.getAttribute('data-student-id'));
@@ -1185,14 +1185,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error('Calculation error');
                 }
             } catch (e) {
-                alert('Công thức không hợp lệ. Vui lòng kiểm tra lại.');
+                showAlert('Công thức không hợp lệ. Vui lòng kiểm tra lại.', 'danger');
                 return;
             }
         }
         
         customFormulaString = formula;
         localStorage.setItem(`customFormula_${assignmentId}`, formula);
-        alert('Công thức đã được lưu thành công!');
+        showAlert('Công thức đã được lưu thành công!');
         updateFormulaActiveIndicator();
         
         // Recalculate all student averages
