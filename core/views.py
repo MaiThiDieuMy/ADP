@@ -4,10 +4,11 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.utils import timezone
 import openpyxl
 import json
+from urllib.parse import quote
 
 from .models import (
     Teacher, Subject, ClassRoom, Semester, 
@@ -1155,4 +1156,59 @@ def update_grades(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
 
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}) 
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+@user_passes_test(is_teacher)
+def download_grades(request, assignment_id):
+    assignment = get_object_or_404(TeacherAssignment, id=assignment_id)
+    
+    # Check if the teacher is authorized to download grades for this assignment
+    if assignment.teacher.user != request.user:
+        return HttpResponseForbidden("Bạn không có quyền tải xuống điểm của lớp này.")
+    
+    # Create a new workbook
+    wb = openpyxl.Workbook()
+    sheet = wb.active
+    
+    # Set headers
+    headers = ['Mã SV', 'Họ tên']
+    grade_types = GradeType.objects.all().order_by('name')
+    for grade_type in grade_types:
+        headers.append(grade_type.name)
+    
+    # Write headers
+    for col, header in enumerate(headers, 1):
+        sheet.cell(row=1, column=col, value=header)
+    
+    # Get all students in the class
+    students = Student.objects.filter(classroom=assignment.classroom).order_by('student_id')
+    
+    # Write student data
+    for row, student in enumerate(students, 2):
+        sheet.cell(row=row, column=1, value=student.student_id)
+        sheet.cell(row=row, column=2, value=student.name)
+        
+        # Write grades for each grade type
+        for col, grade_type in enumerate(grade_types, 3):
+            grade = Grade.objects.filter(
+                student=student,
+                grade_type=grade_type,
+                teacher_assignment=assignment
+            ).first()
+            sheet.cell(row=row, column=col, value=grade.value if grade else '')
+    
+    # Generate filename with Vietnamese characters
+    filename = f"{assignment.classroom.name}_{assignment.subject.name}.xlsx"
+    encoded_filename = quote(filename)
+    
+    # Create response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{encoded_filename}"'
+    
+    # Save workbook to response
+    wb.save(response)
+    
+    return response 
