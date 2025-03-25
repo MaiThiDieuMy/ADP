@@ -890,9 +890,6 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebarCollapse.addEventListener('click', toggleSidebar);
     overlay.addEventListener('click', toggleSidebar);
 
-<<<<<<< HEAD
-    // Function to calculate average grade
-=======
     // Close sidebar on mobile when clicking a nav link
     const navLinks = document.querySelectorAll('#sidebar .nav-link');
     navLinks.forEach(link => {
@@ -953,7 +950,6 @@ document.addEventListener('DOMContentLoaded', function() {
     loadFormula();
 
     // Function to calculate average grade using custom formula
->>>>>>> 7f82577 (Thêm chức năng đẩy file điểm từ file excel, và tính toán cột điểm tb theo công thức tự nhập)
     function calculateAverage(studentId) {
         calculateCustomFormula(studentId);
     }
@@ -977,17 +973,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const gradeTypeName = gradeTypeNames[gradeTypeId];
             
             if (value !== '' && value !== null) {
-<<<<<<< HEAD
-                const gradeValue = parseFloat(value);
-                if (!isNaN(gradeValue) && gradeValue >= 0 && gradeValue <= 10) {
-                    total += gradeValue;
-                    count++;
-                } else {
-                    hasAllGrades = false;
-                }
-            } else {
-                hasAllGrades = false;
-=======
                 studentGrades[gradeTypeId] = parseFloat(value);
                 
                 // Replace [GradeTypeName] with actual value
@@ -996,7 +981,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (formulaString.includes(`[${gradeTypeName}]`)) {
                 // If grade is missing but needed in formula
                 allGradesAvailable = false;
->>>>>>> 7f82577 (Thêm chức năng đẩy file điểm từ file excel, và tính toán cột điểm tb theo công thức tự nhập)
             }
         });
         
@@ -1177,25 +1161,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-<<<<<<< HEAD
-    // Close sidebar on mobile when clicking a nav link
-    const navLinks = document.querySelectorAll('#sidebar .nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                toggleSidebar();
-            }
-        });
-    });
-
-    // Close sidebar when window is resized
-    window.addEventListener('resize', function() {
-        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
-            toggleSidebar();
-        }
-    });
-
-=======
         // Validate formula if option is checked
         if (document.getElementById('validateFormula').checked) {
             try {
@@ -1234,7 +1199,6 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#formulaModal').modal('hide');
     });
     
->>>>>>> 7f82577 (Thêm chức năng đẩy file điểm từ file excel, và tính toán cột điểm tb theo công thức tự nhập)
     // Function to show alert in top-right corner
     function showAlert(message, type = 'success') {
         const alertContainer = $('.alert-container');
@@ -1313,11 +1277,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.data('version', updatedGrade.version);
                 });
                 
-<<<<<<< HEAD
-                // Recalculate average after saving
-=======
                 // Update average - use our custom formula instead of server value
->>>>>>> 7f82577 (Thêm chức năng đẩy file điểm từ file excel, và tính toán cột điểm tb theo công thức tự nhập)
                 calculateAverage(studentId);
                 
                 // Show success message
@@ -1353,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `);
         
-        fetch(`/grade-history/?student_id=${studentId}&assignment_id=${assignmentId}`)
+        fetch(`/teacher/grade-history/?student_id=${studentId}&assignment_id=${assignmentId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -1387,12 +1347,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const input = $(this);
         const value = input.val();
         
-        // Only show delete modal if the input has a value
+        // Show delete modal if the input has a value, otherwise just focus the input
         if (value) {
             gradeToDelete.studentId = input.data('student-id');
             gradeToDelete.gradeTypeId = input.data('grade-type-id');
             
             $('#confirmDeleteModal').modal('show');
+        } else {
+            input.focus();
         }
     });
     
