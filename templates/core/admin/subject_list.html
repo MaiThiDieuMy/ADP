@@ -361,7 +361,7 @@
         margin: 15% auto; /* 15% from the top and centered */
         padding: 20px;
         border: 1px solid #888;
-        width: 80%; /* Could be more or less, depending on screen size */
+        width: 50%; /* Adjusted width to make the modal smaller */
     }
 
     .close {
@@ -527,12 +527,14 @@
 <div id="deleteModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
-        <h2>Xác nhận xóa môn học</h2>
-        <p>Bạn có chắc chắn muốn xóa môn học "<span id="subjectName"></span>" không?</p>
+        <h2 class="text-center">Xác nhận xóa môn học</h2>
+        <p class="text-center">Bạn có chắc chắn muốn xóa môn học "<span id="subjectName"></span>" không?</p>
         <form id="deleteForm" method="post" action="">
             {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Xóa</button>
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Hủy</button>
+            <div class="text-center">
+                <button type="submit" class="btn btn-danger">Xóa</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Hủy</button>
+            </div>
         </form>
     </div>
 </div>
