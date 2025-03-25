@@ -20,6 +20,8 @@ urlpatterns = [
     
     path('dashboard/subjects/', views.subject_list, name='subject_list'),
     path('dashboard/subjects/create/', views.subject_create, name='subject_create'),
+    path('subject/<int:pk>/edit/', views.subject_edit, name='subject_edit'),
+    path('subject/<int:pk>/delete/', views.subject_delete, name='subject_delete'),
     
     path('dashboard/classrooms/', views.classroom_list, name='classroom_list'),
     path('dashboard/classrooms/create/', views.classroom_create, name='classroom_create'),

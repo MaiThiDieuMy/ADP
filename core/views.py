@@ -213,6 +213,30 @@ def subject_create(request):
 
 @login_required
 @user_passes_test(is_admin)
+def subject_edit(request, pk):
+    subject = get_object_or_404(Subject, pk=pk)
+    if request.method == 'POST':
+        form = SubjectForm(request.POST, instance=subject)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Môn học đã được cập nhật.')
+            return redirect('subject_list')
+    else:
+        form = SubjectForm(instance=subject)
+    return render(request, 'core/admin/subject_form.html', {'form': form})
+
+@login_required
+@user_passes_test(is_admin)
+def subject_delete(request, pk):
+    subject = get_object_or_404(Subject, pk=pk)
+    if request.method == 'POST':
+        subject.delete()
+        messages.success(request, 'Môn học đã được xóa.')
+        return redirect('subject_list')
+    return render(request, 'core/admin/subject_confirm_delete.html', {'subject': subject})
+
+@login_required
+@user_passes_test(is_admin)
 def classroom_list(request):
     classrooms = ClassRoom.objects.all()
     return render(request, 'core/admin/classroom_list.html', {'classrooms': classrooms})
