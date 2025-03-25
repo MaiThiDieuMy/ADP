@@ -700,15 +700,31 @@
                                     <th>Mã SV</th>
                                     <th>Họ tên</th>
                                     {% for grade_type in grade_types %}
-                                        <th>{{ grade_type.name }}</th>
+                                        <th>
+                                            <span class="grade-header-name" 
+                                                  data-grade-type-id="{{ grade_type.id }}"
+                                                  data-grade-type-name="{{ grade_type.name }}"
+                                                  style="cursor: pointer;" 
+                                                  title="Nhấn để thêm vào công thức">
+                                                {{ grade_type.name }}
+                                            </span>
+                                        </th>
                                     {% endfor %}
-                                    <th class="average-grade">Điểm TB</th>
+                                    <th class="average-grade">
+                                        <div class="d-flex align-items-center">
+                                            <span>Điểm TB</span>
+                                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="customFormulaBtn" data-bs-toggle="modal" data-bs-target="#formulaModal">
+                                                <i class="fas fa-calculator"></i>
+                                                <span class="formula-active-indicator d-none ms-1">•</span>
+                                            </button>
+                                        </div>
+                                    </th>
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for student in students %}
-                                    <tr data-student-id="{{ student.id }}">
+                                    <tr class="student-row" data-student-id="{{ student.id }}">
                                         <td>{{ student.student_id }}</td>
                                         <td>{{ student.name }}</td>
                                         {% for grade_type in grade_types %}
@@ -801,6 +817,59 @@
     </div>
 </div>
 
+<!-- Grade Formula Modal -->
+<div class="modal fade" id="formulaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-calculator me-2"></i>Tùy chỉnh công thức tính điểm TB</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Hướng dẫn:</strong> Nhập công thức tính điểm theo ý muốn. Nhấn vào tên cột điểm để thêm vào công thức.
+                </div>
+                
+                <div class="mb-3">
+                    <label for="customFormula" class="form-label">Công thức tính điểm:</label>
+                    <div class="input-group mb-3">
+                        <textarea id="customFormula" class="form-control" rows="3" placeholder="Ví dụ: ([Giữa kỳ] + [Cuối kỳ]*2)/3"></textarea>
+                        <button class="btn btn-outline-secondary" type="button" id="clearFormula">Xóa</button>
+                    </div>
+                    <div class="form-text">Sử dụng các phép toán: +, -, *, /, (, ). Ví dụ: ([Giữa kỳ] + [Thực hành])/2</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Nhấn vào loại điểm để thêm vào công thức:</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for grade_type in grade_types %}
+                        <button type="button" class="btn btn-sm btn-outline-primary grade-type-btn" 
+                                data-grade-type-name="{{ grade_type.name }}"
+                                data-grade-type-id="{{ grade_type.id }}">
+                            {{ grade_type.name }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="validateFormula" checked>
+                        <label class="form-check-label" for="validateFormula">
+                            Kiểm tra tính hợp lệ của công thức
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveFormula">Áp dụng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -821,53 +890,9 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebarCollapse.addEventListener('click', toggleSidebar);
     overlay.addEventListener('click', toggleSidebar);
 
+<<<<<<< HEAD
     // Function to calculate average grade
-    function calculateAverage(studentId) {
-        let total = 0;
-        let count = 0;
-        let requiredCount = $('.grade-input[data-student-id="' + studentId + '"]').length; // Tổng số cột điểm cần có
-        let hasAllGrades = true;
-        
-        // Get all grade inputs for this student
-        $(`input[data-student-id="${studentId}"]`).each(function() {
-            const value = $(this).val();
-            if (value !== '' && value !== null) {
-                const gradeValue = parseFloat(value);
-                if (!isNaN(gradeValue) && gradeValue >= 0 && gradeValue <= 10) {
-                    total += gradeValue;
-                    count++;
-                } else {
-                    hasAllGrades = false;
-                }
-            } else {
-                hasAllGrades = false;
-            }
-        });
-        
-        // Update average display
-        const averageSpan = $(`.average-value[data-student-id="${studentId}"]`);
-        if (hasAllGrades && count === requiredCount && count > 0) {
-            const average = (total / count).toFixed(2);
-            averageSpan.text(average);
-            averageSpan.removeClass('incomplete-grades');
-        } else {
-            averageSpan.text('Chưa đủ điểm');
-            averageSpan.addClass('incomplete-grades');
-        }
-    }
-
-    // Calculate initial averages
-    $('.grade-input').each(function() {
-        const studentId = $(this).data('student-id');
-        calculateAverage(studentId);
-    });
-
-    // Add event listener for input changes
-    $('.grade-input').on('input', function() {
-        const studentId = $(this).data('student-id');
-        calculateAverage(studentId);
-    });
-
+=======
     // Close sidebar on mobile when clicking a nav link
     const navLinks = document.querySelectorAll('#sidebar .nav-link');
     navLinks.forEach(link => {
@@ -885,6 +910,331 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    let customFormulaString = '';
+    let gradeTypeNames = {};
+
+    // Function to collect grade type names
+    function initializeGradeTypes() {
+        // Initialize from buttons
+        document.querySelectorAll('.grade-type-btn').forEach(btn => {
+            const gradeTypeId = btn.getAttribute('data-grade-type-id');
+            const gradeTypeName = btn.getAttribute('data-grade-type-name');
+            gradeTypeNames[gradeTypeId] = gradeTypeName;
+        });
+        
+        // Initialize from headers as well
+        document.querySelectorAll('.grade-header-name').forEach(header => {
+            const gradeTypeId = header.getAttribute('data-grade-type-id');
+            const gradeTypeName = header.getAttribute('data-grade-type-name');
+            gradeTypeNames[gradeTypeId] = gradeTypeName;
+        });
+    }
+    
+    // Load formula from localStorage
+    function loadFormula() {
+        const assignmentId = {{ assignment.id }};
+        const savedFormula = localStorage.getItem(`customFormula_${assignmentId}`);
+        if (savedFormula) {
+            customFormulaString = savedFormula;
+            console.log(`Loaded formula from localStorage: ${customFormulaString}`);
+            
+            // Calculate all student averages after formula is loaded
+            setTimeout(() => {
+                document.querySelectorAll('tr.student-row').forEach(row => {
+                    calculateAverage(row.getAttribute('data-student-id'));
+                });
+            }, 100);
+        }
+        updateFormulaActiveIndicator();
+    }
+    
+    // Initialize in the proper order
+    initializeGradeTypes();
+    loadFormula();
+
+    // Function to calculate average grade using custom formula
+>>>>>>> 7f82577 (Thêm chức năng đẩy file điểm từ file excel, và tính toán cột điểm tb theo công thức tự nhập)
+    function calculateAverage(studentId) {
+        calculateCustomFormula(studentId);
+    }
+    
+    // Calculate average based on custom formula
+    function calculateCustomFormula(studentId) {
+        if (!customFormulaString) {
+            // Default formula: simple average of all grades
+            calculateSimpleAverage(studentId);
+            return;
+        }
+        
+        let studentGrades = {};
+        let formulaString = customFormulaString;
+        let allGradesAvailable = true;
+        
+        // Get all grade inputs for this student
+        $(`input[data-student-id="${studentId}"]`).each(function() {
+            const value = $(this).val();
+            const gradeTypeId = $(this).data('grade-type-id');
+            const gradeTypeName = gradeTypeNames[gradeTypeId];
+            
+            if (value !== '' && value !== null) {
+<<<<<<< HEAD
+                const gradeValue = parseFloat(value);
+                if (!isNaN(gradeValue) && gradeValue >= 0 && gradeValue <= 10) {
+                    total += gradeValue;
+                    count++;
+                } else {
+                    hasAllGrades = false;
+                }
+            } else {
+                hasAllGrades = false;
+=======
+                studentGrades[gradeTypeId] = parseFloat(value);
+                
+                // Replace [GradeTypeName] with actual value
+                const regex = new RegExp('\\[' + gradeTypeName + '\\]', 'g');
+                formulaString = formulaString.replace(regex, studentGrades[gradeTypeId]);
+            } else if (formulaString.includes(`[${gradeTypeName}]`)) {
+                // If grade is missing but needed in formula
+                allGradesAvailable = false;
+>>>>>>> 7f82577 (Thêm chức năng đẩy file điểm từ file excel, và tính toán cột điểm tb theo công thức tự nhập)
+            }
+        });
+        
+        // Update average display
+        const averageSpan = $(`.average-value[data-student-id="${studentId}"]`);
+        
+        if (allGradesAvailable) {
+            try {
+                // Evaluate the formula
+                // Replace any remaining grade placeholders with 0
+                formulaString = formulaString.replace(/\[[^\]]+\]/g, '0');
+                
+                // Check for unneeded characters to prevent code injection
+                if (!/^[0-9+\-*/(). ]+$/.test(formulaString)) {
+                    throw new Error('Invalid characters in formula');
+                }
+                
+                const result = eval(formulaString);
+                
+                if (isNaN(result) || !isFinite(result)) {
+                    throw new Error('Calculation error');
+                }
+                
+                // Show the final average
+                const average = parseFloat(result).toFixed(2);
+                averageSpan.text(average);
+                averageSpan.removeClass('incomplete-grades');
+            } catch (e) {
+                console.error('Formula evaluation error:', e);
+                averageSpan.text('Lỗi công thức');
+                averageSpan.addClass('incomplete-grades');
+            }
+        } else {
+            averageSpan.text('Chưa đủ điểm');
+            averageSpan.addClass('incomplete-grades');
+        }
+    }
+    
+    // Calculate a simple average when no custom formula is set
+    function calculateSimpleAverage(studentId) {
+        let total = 0;
+        let count = 0;
+        
+        // Get all grade inputs for this student
+        $(`input[data-student-id="${studentId}"]`).each(function() {
+            const value = $(this).val();
+            
+            if (value !== '' && value !== null) {
+                total += parseFloat(value);
+                count++;
+            }
+        });
+        
+        // Update average display
+        const averageSpan = $(`.average-value[data-student-id="${studentId}"]`);
+        
+        if (count > 0) {
+            const average = (total / count).toFixed(2);
+            averageSpan.text(average);
+            averageSpan.removeClass('incomplete-grades');
+        } else {
+            averageSpan.text('Chưa có điểm');
+            averageSpan.addClass('incomplete-grades');
+        }
+    }
+
+    // Calculate initial averages (immediate display)
+    $('.grade-input').each(function() {
+        const studentId = $(this).data('student-id');
+        calculateAverage(studentId);
+    });
+    
+    // Calculate initial averages for all students again right after page load
+    // This ensures the custom formula is properly applied when page is fully loaded
+    window.addEventListener('load', function() {
+        // Delay to ensure all elements are fully loaded
+        setTimeout(() => {
+            // Apply the saved formula from localStorage if it exists
+            document.querySelectorAll('tr.student-row').forEach(row => {
+                const studentId = row.getAttribute('data-student-id');
+                calculateAverage(studentId);
+            });
+            console.log('Applied formula to all students on page load');
+        }, 200);
+    });
+
+    // Add event listener for input changes
+    $('.grade-input').on('input', function() {
+        const studentId = $(this).data('student-id');
+        calculateAverage(studentId);
+    });
+    
+    // Add event listener for grade type buttons (to insert into formula)
+    document.querySelectorAll('.grade-type-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const gradeTypeName = this.getAttribute('data-grade-type-name');
+            const formulaTextarea = document.getElementById('customFormula');
+            const currentPos = formulaTextarea.selectionStart;
+            const currentValue = formulaTextarea.value;
+            
+            // Insert grade type at cursor position
+            const newValue = 
+                currentValue.substring(0, currentPos) + 
+                `[${gradeTypeName}]` + 
+                currentValue.substring(formulaTextarea.selectionEnd);
+            
+            formulaTextarea.value = newValue;
+            
+            // Set cursor position after inserted text
+            const newPos = currentPos + gradeTypeName.length + 2; // +2 for brackets
+            formulaTextarea.focus();
+            formulaTextarea.setSelectionRange(newPos, newPos);
+        });
+    });
+    
+    // Add event listener for clickable column headers
+    document.querySelectorAll('.grade-header-name').forEach(header => {
+        header.addEventListener('click', function() {
+            const gradeTypeName = this.getAttribute('data-grade-type-name');
+            
+            // Open the formula modal
+            const formulaModal = new bootstrap.Modal(document.getElementById('formulaModal'));
+            formulaModal.show();
+            
+            // Insert the grade type into the formula
+            const formulaTextarea = document.getElementById('customFormula');
+            const currentValue = formulaTextarea.value;
+            
+            // Add the grade type at the end or with appropriate operators
+            let newValue = currentValue;
+            if (currentValue === '') {
+                newValue = `[${gradeTypeName}]`;
+            } else if (currentValue.endsWith(')') || 
+                       /[0-9]$/.test(currentValue) || 
+                       currentValue.endsWith(']')) {
+                // If formula ends with a number or closing bracket, add a plus sign
+                newValue = `${currentValue} + [${gradeTypeName}]`;
+            } else if (currentValue.endsWith(' ')) {
+                // Just append if there's already a space
+                newValue = `${currentValue}[${gradeTypeName}]`;
+            } else {
+                // Otherwise add a space before adding the grade type
+                newValue = `${currentValue} [${gradeTypeName}]`;
+            }
+            
+            formulaTextarea.value = newValue;
+            formulaTextarea.focus();
+            formulaTextarea.setSelectionRange(newValue.length, newValue.length);
+        });
+    });
+    
+    // Update formula textarea when modal is opened
+    $('#formulaModal').on('shown.bs.modal', function() {
+        const formulaTextarea = document.getElementById('customFormula');
+        formulaTextarea.value = customFormulaString;
+        formulaTextarea.focus();
+    });
+    
+    // Clear formula button
+    document.getElementById('clearFormula').addEventListener('click', function() {
+        document.getElementById('customFormula').value = '';
+    });
+    
+    // Save formula
+    document.getElementById('saveFormula').addEventListener('click', function() {
+        const formula = document.getElementById('customFormula').value.trim();
+        const assignmentId = {{ assignment.id }};
+        
+        if (!formula) {
+            customFormulaString = '';
+            localStorage.setItem(`customFormula_${assignmentId}`, '');
+            alert('Công thức đã được đặt lại thành tính trung bình cộng.');
+            updateFormulaActiveIndicator();
+            document.querySelectorAll('tr.student-row').forEach(row => {
+                calculateAverage(row.getAttribute('data-student-id'));
+            });
+            $('#formulaModal').modal('hide');
+            return;
+        }
+
+<<<<<<< HEAD
+    // Close sidebar on mobile when clicking a nav link
+    const navLinks = document.querySelectorAll('#sidebar .nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
+    });
+
+    // Close sidebar when window is resized
+    window.addEventListener('resize', function() {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
+    });
+
+=======
+        // Validate formula if option is checked
+        if (document.getElementById('validateFormula').checked) {
+            try {
+                // Test formula with sample values
+                let testFormula = formula;
+                
+                // Replace all grade placeholders with 5 (test value)
+                testFormula = testFormula.replace(/\[[^\]]+\]/g, '5');
+                
+                // Check for unneeded characters to prevent code injection
+                if (!/^[0-9+\-*/(). ]+$/.test(testFormula)) {
+                    throw new Error('Invalid characters in formula');
+                }
+                
+                const result = eval(testFormula);
+                
+                if (isNaN(result) || !isFinite(result)) {
+                    throw new Error('Calculation error');
+                }
+            } catch (e) {
+                alert('Công thức không hợp lệ. Vui lòng kiểm tra lại.');
+                return;
+            }
+        }
+        
+        customFormulaString = formula;
+        localStorage.setItem(`customFormula_${assignmentId}`, formula);
+        alert('Công thức đã được lưu thành công!');
+        updateFormulaActiveIndicator();
+        
+        // Recalculate all student averages
+        document.querySelectorAll('tr.student-row').forEach(row => {
+            calculateAverage(row.getAttribute('data-student-id'));
+        });
+        
+        $('#formulaModal').modal('hide');
+    });
+    
+>>>>>>> 7f82577 (Thêm chức năng đẩy file điểm từ file excel, và tính toán cột điểm tb theo công thức tự nhập)
     // Function to show alert in top-right corner
     function showAlert(message, type = 'success') {
         const alertContainer = $('.alert-container');
@@ -892,16 +1242,31 @@ document.addEventListener('DOMContentLoaded', function() {
             .addClass(`alert alert-${type} alert-dismissible fade show`)
             .html(`
                 <i class="fas fa-check-circle me-2"></i>${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             `);
         
         alertContainer.append(alert);
         
         // Auto dismiss after 3 seconds
         setTimeout(() => {
-            alert.addClass('fade-out');
-            setTimeout(() => alert.remove(), 500);
+            alert.alert('close');
         }, 3000);
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
     // Handle row saving
@@ -948,7 +1313,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.data('version', updatedGrade.version);
                 });
                 
+<<<<<<< HEAD
                 // Recalculate average after saving
+=======
+                // Update average - use our custom formula instead of server value
+>>>>>>> 7f82577 (Thêm chức năng đẩy file điểm từ file excel, và tính toán cột điểm tb theo công thức tự nhập)
                 calculateAverage(studentId);
                 
                 // Show success message
@@ -967,29 +1336,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Helper function to get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    
     // View grade history
     $('.view-history').click(function() {
         const studentId = $(this).data('student-id');
-        const modal = $('#historyModal');
+        const assignmentId = {{ assignment.id }};
         
-        // Show loading state in modal
-        modal.find('#history-content').html(`
+        // Show modal
+        $('#historyModal').modal('show');
+        
+        // Load history data
+        $('#history-content').html(`
             <div class="text-center">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Đang tải...</span>
@@ -997,31 +1353,107 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `);
         
-        modal.modal('show');
-        
-        // Fetch grade history
-        fetch(`/grade-history/?student_id=${studentId}`)
+        fetch(`/grade-history/?student_id=${studentId}&assignment_id=${assignmentId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    modal.find('#history-content').html(data.html);
+                    $('#history-content').html(data.html);
                 } else {
-                    modal.find('#history-content').html(`
+                    $('#history-content').html(`
                         <div class="alert alert-danger">
-                            ${data.error || 'Có lỗi xảy ra khi tải lịch sử điểm'}
+                            <i class="fas fa-exclamation-circle me-2"></i>${data.error || 'Có lỗi xảy ra khi tải lịch sử'}
                         </div>
                     `);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                modal.find('#history-content').html(`
+                $('#history-content').html(`
                     <div class="alert alert-danger">
-                        Có lỗi xảy ra khi tải lịch sử điểm
+                        <i class="fas fa-exclamation-circle me-2"></i>Có lỗi xảy ra khi tải lịch sử
                     </div>
                 `);
+            });
+    });
+    
+    // Delete grade handling
+    let gradeToDelete = {
+        studentId: null,
+        gradeTypeId: null
+    };
+    
+    // Show delete confirmation modal
+    $(document).on('dblclick', '.grade-input', function() {
+        const input = $(this);
+        const value = input.val();
+        
+        // Only show delete modal if the input has a value
+        if (value) {
+            gradeToDelete.studentId = input.data('student-id');
+            gradeToDelete.gradeTypeId = input.data('grade-type-id');
+            
+            $('#confirmDeleteModal').modal('show');
+        }
+    });
+    
+    // Handle delete confirmation
+    $('#confirmDelete').click(function() {
+        if (!gradeToDelete.studentId || !gradeToDelete.gradeTypeId) {
+            return;
+        }
+        
+        fetch('/delete-grade/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                student_id: gradeToDelete.studentId,
+                grade_type_id: gradeToDelete.gradeTypeId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Clear the input
+                $(`input[data-student-id="${gradeToDelete.studentId}"][data-grade-type-id="${gradeToDelete.gradeTypeId}"]`)
+                    .val('')
+                    .removeData('grade-id')
+                    .attr('data-grade-id', '');
+                
+                // Update average using our custom formula
+                calculateAverage(gradeToDelete.studentId);
+                
+                showAlert('Đã xóa điểm thành công');
+                
+                // Close modal
+                $('#confirmDeleteModal').modal('hide');
+            } else {
+                showAlert(data.error || 'Có lỗi xảy ra khi xóa điểm', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Có lỗi xảy ra khi xóa điểm', 'danger');
         });
     });
+
+    // Function to update the UI to show if a custom formula is active
+    function updateFormulaActiveIndicator() {
+        const indicator = document.querySelector('.formula-active-indicator');
+        if (indicator) {
+            if (customFormulaString) {
+                indicator.classList.remove('d-none');
+                document.getElementById('customFormulaBtn').classList.add('btn-primary');
+                document.getElementById('customFormulaBtn').classList.remove('btn-outline-primary');
+            } else {
+                indicator.classList.add('d-none');
+                document.getElementById('customFormulaBtn').classList.remove('btn-primary');
+                document.getElementById('customFormulaBtn').classList.add('btn-outline-primary');
+            }
+        }
+    }
 });
 </script>
 {% endblock %} 

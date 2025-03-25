@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tải lên điểm từ Excel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <div class="user-avatar">
+                    <i class="fas fa-user fa-2x text-white"></i>
+                </div>
+                <div class="user-info">
+                    <h6 class="mb-1">{{ request.user.get_full_name }}</h6>
+                    <small class="text-white">Giáo viên</small>
+                </div>
+            </div>
+
+            <ul class="nav flex-column mt-3">
+                <li class="nav-item">
+                    <a href="{% url 'teacher_dashboard' %}" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'teacher_profile' %}" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        Thông tin cá nhân
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'teacher_change_password' %}" class="nav-link">
+                        <i class="fas fa-key"></i>
+                        Đổi mật khẩu
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a href="{% url 'logout' %}" class="nav-link text-danger">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Overlay -->
+        <div class="overlay"></div>
+        
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4" id="content">
+            <!-- Toggle button for sidebar -->
+            <button id="sidebarCollapse">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="card mt-4 mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-file-upload me-2"></i>Tải lên điểm từ Excel</h5>
+                    <a href="{% url 'class_grades' assignment.id %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-upload me-2"></i>Tải lên file</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" enctype="multipart/form-data" class="mb-4">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <label for="{{ form.excel_file.id_for_label }}" class="form-label">
+                                                <i class="fas fa-file-excel me-2"></i>Chọn file Excel
+                                            </label>
+                                            {{ form.excel_file }}
+                                            <div class="form-text">Tải lên file Excel chứa điểm của sinh viên</div>
+                                            {% if form.excel_file.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.excel_file.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-upload me-2"></i>Tải lên
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Hướng dẫn</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>File Excel cần đảm bảo có:</p>
+                                    <ul>
+                                        <li>Một cột tên <code>student_id</code> chứa mã số sinh viên</li>
+                                        <li>Các cột khác đại diện cho các loại điểm, ví dụ: <code>Giữa kỳ</code>, <code>Cuối kỳ</code>...</li>
+                                    </ul>
+                                    
+                                    <h6 class="mt-3"><i class="fas fa-table me-2"></i>Ví dụ về định dạng:</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>student_id</th>
+                                                    <th>Giữa kỳ</th>
+                                                    <th>Cuối kỳ</th>
+                                                    <th>...</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>SV001</td>
+                                                    <td>8.5</td>
+                                                    <td>9.0</td>
+                                                    <td>...</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>SV002</td>
+                                                    <td>7.5</td>
+                                                    <td>8.0</td>
+                                                    <td>...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="alert alert-info mt-3">
+                                        <i class="fas fa-lightbulb me-2"></i><strong>Ghi chú:</strong> 
+                                        <ul class="mb-0">
+                                            <li>Hệ thống sẽ tự động map mã sinh viên với dữ liệu hiện có.</li>
+                                            <li>Loại điểm không tồn tại sẽ được tạo mới tự động.</li>
+                                            <li>Điểm hợp lệ phải từ 0-10.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const content = document.getElementById('content');
+    const sidebarCollapse = document.getElementById('sidebarCollapse');
+    const overlay = document.querySelector('.overlay');
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('active');
+        content.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
+
+    if (sidebarCollapse) {
+        sidebarCollapse.addEventListener('click', toggleSidebar);
+    }
+    
+    if (overlay) {
+        overlay.addEventListener('click', toggleSidebar);
+    }
+
+    // Close sidebar on mobile when clicking a nav link
+    const navLinks = document.querySelectorAll('#sidebar .nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
+    });
+
+    // Close sidebar when window is resized
+    window.addEventListener('resize', function() {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
+    });
+});
+</script>
+{% endblock %} 

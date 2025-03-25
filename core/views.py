@@ -673,47 +673,99 @@ def upload_grades(request, assignment_id):
                 wb = openpyxl.load_workbook(excel_file)
                 sheet = wb.active
                 
+                # Get headers (first row)
                 headers = []
                 for col in range(1, sheet.max_column + 1):
                     cell_value = sheet.cell(row=1, column=col).value
                     if cell_value:
-                        headers.append(cell_value)
+                        # Clean up header name by stripping whitespace and converting to lowercase for comparison
+                        headers.append({
+                            'original': str(cell_value).strip(), 
+                            'normalized': str(cell_value).strip().lower()
+                        })
+                
+                # Extract normalized header names for validation
+                normalized_headers = [h['normalized'] for h in headers]
                 
                 # Validate headers (must include student_id and at least one grade type)
-                if 'student_id' not in headers:
+                if 'student_id' not in normalized_headers:
                     messages.error(request, "File Excel phải có cột 'student_id'")
                     return redirect('class_grades', assignment_id=assignment.id)
                 
-                # Get grade type mappings
+                if len(headers) < 2:
+                    messages.error(request, "File Excel phải có ít nhất một cột điểm ngoài cột student_id")
+                    return redirect('class_grades', assignment_id=assignment.id)
+                
+                # Find student_id column index
+                student_id_col_idx = None
+                for idx, header in enumerate(headers):
+                    if header['normalized'] == 'student_id':
+                        student_id_col_idx = idx + 1
+                        break
+                
+                # Get all existing grade types for better matching
+                existing_grade_types = {gt.name.lower(): gt for gt in GradeType.objects.all()}
+                
+                # Map normalized header names to actual GradeType objects
                 grade_types = {}
+                new_grade_types = []
+                
                 for header in headers:
-                    if header != 'student_id':
-                        grade_type, created = GradeType.objects.get_or_create(name=header)
-                        grade_types[header] = grade_type
+                    if header['normalized'] != 'student_id':
+                        # Check for existing grade type with same name (case insensitive)
+                        if header['normalized'] in existing_grade_types:
+                            # Use existing grade type
+                            grade_types[header['original']] = existing_grade_types[header['normalized']]
+                        else:
+                            # Create new grade type with original case
+                            grade_type = GradeType.objects.create(name=header['original'])
+                            grade_types[header['original']] = grade_type
+                            new_grade_types.append(header['original'])
+                
+                # Notify about new grade types created
+                if new_grade_types:
+                    messages.info(request, f"Đã tạo mới các loại điểm: {', '.join(new_grade_types)}")
                 
                 # Process data rows
                 updated_count = 0
                 error_count = 0
+                skipped_count = 0
+                student_count = 0
                 
+                # Map students to IDs for faster lookups - make IDs lowercase for case-insensitive matching
+                student_map = {student.student_id.lower(): student for student in Student.objects.filter(classroom=assignment.classroom)}
+                
+                # Track processed student IDs to report statistics
+                processed_students = set()
+                
+                # Process each row in the Excel sheet
                 for row in range(2, sheet.max_row + 1):
-                    student_id = str(sheet.cell(row=row, column=headers.index('student_id') + 1).value)
-                    
-                    if not student_id:
+                    # Get student_id value from the correct column
+                    student_id_cell = sheet.cell(row=row, column=student_id_col_idx)
+                    if not student_id_cell.value:
+                        skipped_count += 1
                         continue
                     
-                    try:
-                        student = Student.objects.get(student_id=student_id, classroom=assignment.classroom)
+                    # Make sure student_id is a string and normalized for comparison
+                    student_id = str(student_id_cell.value).strip()
+                    student_id_lower = student_id.lower()
+                    
+                    # Check if this student exists in the map
+                    if student_id_lower in student_map:
+                        student = student_map[student_id_lower]
+                        processed_students.add(student_id_lower)
                         
-                        for header in headers:
-                            if header != 'student_id':
-                                col_idx = headers.index(header) + 1
+                        # Process each grade column
+                        for idx, header in enumerate(headers):
+                            if header['normalized'] != 'student_id':
+                                col_idx = idx + 1
                                 cell_value = sheet.cell(row=row, column=col_idx).value
                                 
                                 if cell_value is not None:
                                     try:
                                         grade_value = float(cell_value)
                                         if 0 <= grade_value <= 10:
-                                            grade_type = grade_types[header]
+                                            grade_type = grade_types[header['original']]
                                             
                                             # Get or create grade
                                             grade, created = Grade.objects.get_or_create(
@@ -738,19 +790,37 @@ def upload_grades(request, assignment_id):
                                                 grade.save()
                                             
                                             updated_count += 1
+                                        else:
+                                            error_count += 1  # Value out of range
                                     except (ValueError, TypeError):
-                                        error_count += 1
-                    except Student.DoesNotExist:
+                                        error_count += 1  # Not a number
+                    else:
+                        # Student ID not found in this class
                         error_count += 1
                 
-                messages.success(request, f'Đã cập nhật {updated_count} điểm. Có {error_count} lỗi.')
+                student_count = len(processed_students)
+                
+                if updated_count > 0:
+                    messages.success(request, f'Đã cập nhật {updated_count} điểm cho {student_count} sinh viên thành công.')
+                
+                if error_count > 0:
+                    messages.warning(request, f'Có {error_count} giá trị điểm không hợp lệ hoặc mã sinh viên không tồn tại.')
+                
+                if skipped_count > 0:
+                    messages.info(request, f'Đã bỏ qua {skipped_count} dòng không có mã sinh viên.')
+                
+                return redirect('class_grades', assignment_id=assignment.id)
             
             except Exception as e:
                 messages.error(request, f"Lỗi khi xử lý file Excel: {str(e)}")
-            
-            return redirect('class_grades', assignment_id=assignment.id)
+                return redirect('class_grades', assignment_id=assignment.id)
+    else:
+        form = GradeUploadForm()
     
-    return redirect('class_grades', assignment_id=assignment.id)
+    return render(request, 'core/teacher/upload_grades.html', {
+        'form': form,
+        'assignment': assignment
+    })
 
 @login_required
 @user_passes_test(is_teacher)
