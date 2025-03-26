@@ -540,7 +540,7 @@
         }
 
         .nav-title {
-            font-size: 1.4rem;
+        font-size: 1.4rem;
         }
     }
 
@@ -865,6 +865,64 @@
     .table thead {
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
+
+    /* Table header white background styling */
+    .table-white-header {
+        background: white !important;
+    }
+
+    .table-white-header th {
+        background-color: rgba(255, 255, 255, 0.7);
+        color: var(--primary-color) !important;
+        font-weight: 700;
+        padding: 1.2rem 1.5rem;
+        border-bottom: 2px solid rgba(30, 60, 114, 0.1) !important;
+        position: relative;
+        vertical-align: middle;
+        font-size: 1 rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Remove existing gradient styles for this table header */
+    .table thead tr,
+    .table thead th {
+        background: white !important;
+        text-shadow: none;
+    }
+
+    /* Add subtle hover effect */
+    .table-white-header th:hover {
+        background: rgba(30, 60, 114, 0.02) !important;
+        color: var(--primary-color) !important;
+    }
+
+    /* Remove any conflicting styles */
+    .table th,
+    .table-header-gradient th,
+    .table thead th {
+        background: white !important;
+        border: none;
+    }
+
+    /* Ensure text color */
+    .table thead th {
+        color: var(--primary-color) !important;
+    }
+
+    /* Optional: Add subtle transition */
+    .table thead th {
+        transition: all 0.3s ease;
+    }
+
+    /* Remove box shadow */
+    .table thead {
+        box-shadow: none;
+    }
+
+    /* Add border bottom to header */
+    .table thead {
+        border-bottom: 2px solid rgba(30, 60, 114, 0.1);
+    }
 </style>
 {% endblock %}
 
@@ -970,7 +1028,7 @@
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
-                            <tr class="table-gradient-header">
+                            <tr class="table-white-header">
                                 <th class="px-4">Lớp</th>
                                 <th>Môn học</th>
                                 <th>Học kỳ</th>
