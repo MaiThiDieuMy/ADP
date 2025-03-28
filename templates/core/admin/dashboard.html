@@ -293,12 +293,15 @@
         font-weight: 600;
         padding: 1rem 1.5rem;
         background: rgba(33, 147, 176, 0.05);
+        text-align: center;
+        vertical-align: middle;
     }
 
     .table td {
         padding: 1rem 1.5rem;
         vertical-align: middle;
         border-color: rgba(0,0,0,0.05);
+        text-align: center;
     }
 
     .badge {
@@ -309,23 +312,34 @@
     }
 
     .view-btn {
-        padding: 0.5rem;
+        padding: 0.4rem;
         border-radius: 8px;
         background: rgba(33, 147, 176, 0.1);
         color: #2193b0;
         border: none;
-        transition: all 0.4s ease;
-        width: 35px;
-        height: 35px;
-        display: flex;
+        transition: all 0.3s ease;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
+        margin: 0 auto;
     }
 
     .view-btn:hover {
         background: var(--primary-gradient);
         color: white;
         transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    .view-btn i {
+        font-size: 0.9rem;
+    }
+
+    td .view-btn {
+        display: inline-flex;
+        margin: 0 auto;
     }
 
     .view-all-btn {
