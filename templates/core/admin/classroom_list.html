@@ -414,6 +414,37 @@
     .btn-group .btn i {
         margin-right: 0.3rem;
     }
+
+    /* Alert styles */
+    .alert {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .alert.hiding {
+        animation: slideOut 0.3s ease-in forwards;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(120%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(120%);
+            opacity: 0;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -586,6 +617,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sidebarCollapse) sidebarCollapse.addEventListener('click', toggleSidebar);
     if (sidebarClose) sidebarClose.addEventListener('click', toggleSidebar);
     if (overlay) overlay.addEventListener('click', toggleSidebar);
+
+    // Tự động ẩn thông báo sau 3 giây
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.classList.add('hiding');
+            setTimeout(() => {
+                alert.remove();
+            }, 300); // Xóa sau khi animation hoàn thành
+        }, 3000);
+    });
 });
 </script>
 {% endblock %} 
