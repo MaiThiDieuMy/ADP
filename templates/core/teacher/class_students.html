@@ -4,13 +4,366 @@
 
 {% block extra_css %}
 <style>
-    /* Copy all CSS styles from dashboard.html */
+    /* Hide navigation bar */
+    .navbar {
+        display: none !important;
+    }
+
+    /* Adjust main content padding */
+    main {
+        padding-top: 0 !important;
+    }
+
     :root {
-        --primary-color: #1e3c72;
-        --primary-light: #2a5298;
-        --primary-dark: #152b52;
         --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        --text-light: rgba(255,255,255,0.8);
+        --secondary-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+        --accent-gradient: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        --success-gradient: linear-gradient(45deg, #2ecc71, #27ae60);
+        --primary-color: #1e3c72;
+        --text-light: rgba(255, 255, 255, 0.8);
+    }
+
+    .hero-section {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 30px rgba(0,0,0,0.15);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.1;
+        animation: slide 20s linear infinite;
+    }
+
+    .hero-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: float 3s ease-in-out infinite;
+        background: rgba(255, 255, 255, 0.1);
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 auto 1rem;
+        backdrop-filter: blur(5px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .hero-title {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0.3rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        animation: fadeInUp 1s ease-out;
+        letter-spacing: 1px;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+        opacity: 0;
+        animation: fadeInUp 1s ease-out forwards;
+        animation-delay: 0.3s;
+        font-weight: 300;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .hero-stats {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        animation: fadeInUp 1s ease-out forwards;
+        animation-delay: 0.6s;
+        opacity: 0;
+    }
+
+    .hero-stat {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .hero-stat:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    .hero-stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .layout-container {
+        min-height: 100vh;
+        background: #f4f6f9;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .layout-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%231e3c72' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.1;
+        animation: slide 20s linear infinite;
+        pointer-events: none;
+    }
+
+    @keyframes slide {
+        from { background-position: 0 0; }
+        to { background-position: 100% 100%; }
+    }
+
+    .main-content {
+        padding: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--secondary-gradient);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: -1;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+
+    .stat-card:hover::before {
+        opacity: 0.05;
+    }
+
+    .stat-card.blue { border-left: 4px solid #2193b0; }
+    .stat-card.green { border-left: 4px solid #6dd5ed; }
+    .stat-card.yellow { border-left: 4px solid #ff6b6b; }
+    .stat-card.red { border-left: 4px solid #ff8e8e; }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+        line-height: 1;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .stat-title {
+        font-size: 1.1rem;
+        color: #1e3c72;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .stat-link {
+        color: #2193b0;
+        text-decoration: none;
+        font-weight: 500;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.4s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .stat-link:hover {
+        color: #1e3c72;
+    }
+
+    .stat-link i {
+        transition: transform 0.3s ease;
+    }
+
+    .stat-link:hover i {
+        transform: translateX(5px);
+    }
+
+    .recent-teachers-card {
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .recent-teachers-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+
+    .recent-teachers-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background: var(--primary-gradient);
+    }
+
+    .recent-teachers-title {
+        font-size: 1.2rem;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .recent-teachers-title i {
+        margin-right: 0.5rem;
+        font-size: 1.3em;
+    }
+
+    .table {
+        margin: 0;
+    }
+
+    .table th {
+        border-top: none;
+        color: #1e3c72;
+        font-weight: 600;
+        padding: 1rem 1.5rem;
+        background: rgba(33, 147, 176, 0.05);
+    }
+
+    .table td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-color: rgba(0,0,0,0.05);
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .view-btn {
+        padding: 0.5rem;
+        border-radius: 8px;
+        background: rgba(33, 147, 176, 0.1);
+        color: #2193b0;
+        border: none;
+        transition: all 0.4s ease;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .view-btn:hover {
+        background: var(--primary-gradient);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .view-all-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.8rem 1.5rem;
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 2.5rem;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+    }
+
+    .view-all-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.4);
+        color: white;
+    }
+
+    .logout-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: var(--primary-gradient);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.4s ease;
+        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+    }
+
+    .logout-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.4);
     }
 
     /* Sidebar styles */
@@ -36,6 +389,7 @@
         background: var(--primary-dark);
         text-align: center;
         border-bottom: 1px solid rgba(255,255,255,0.1);
+        position: relative;
     }
 
     .sidebar-header .user-avatar {
@@ -93,29 +447,44 @@
     /* Toggle button */
     #sidebarCollapse {
         position: fixed;
-        top: 20px;
-        left: 20px;
+        top: 35px;
+        left: 10px;
         z-index: 999;
         border: none;
-        background: var(--primary-color);
+        background: var(--primary-gradient);
+        color: white;
         padding: 12px 15px;
         border-radius: 50%;
         cursor: pointer;
         transition: all 0.3s;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.2);
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     #sidebarCollapse:hover {
-        background: var(--primary-light);
+        background: var(--primary-gradient);
         transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(30, 60, 114, 0.3);
+    }
+
+    #sidebarCollapse i {
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+    }
+
+    #sidebarCollapse:hover i {
+        transform: rotate(180deg);
     }
 
     /* Main content */
     #content {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         margin-left: 0;
-        padding: 30px;
-        padding-top: 110px;
+        padding: 20px;
         background: #f8f9fa;
         min-height: 100vh;
     }
@@ -124,323 +493,7 @@
         margin-left: 280px;
     }
 
-    /* Cards styling */
-    .card {
-        border: 1px solid rgba(30, 60, 114, 0.1);
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        transition: all 0.3s;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-    }
-
-    .card-header {
-        border-radius: 15px 15px 0 0 !important;
-        border-bottom: 2px solid rgba(30, 60, 114, 0.1);
-    }
-
-    /* Stats cards */
-    .stats-card {
-        border-radius: 20px;
-        overflow: hidden;
-        min-height: 200px;
-        background: #1e3c72 !important;
-        cursor: pointer;
-    }
-
-    .stats-card .card-body {
-        padding: 35px;
-        height: 100%;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    }
-
-    .stats-card h6.text-uppercase {
-        font-size: 1.4rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        color: rgba(255, 255, 255, 0.9);
-        letter-spacing: 0.5px;
-    }
-
-    .stats-card h2.mb-0 {
-        font-size: 3.5rem;
-        font-weight: 700;
-        color: white;
-        margin-bottom: 0.5rem;
-    }
-
-    .stats-card i.fa-3x {
-        font-size: 4.5rem;
-        color: white;
-        opacity: 0.8;
-    }
-
-    .stats-card .d-flex {
-        height: 100%;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .stats-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(30, 60, 114, 0.2);
-    }
-
-    .stats-card:hover i {
-        transform: scale(1.1) rotate(5deg);
-        opacity: 1;
-    }
-
-    .stats-card::after {
-        content: 'Nhấn để xem chi tiết';
-        position: absolute;
-        bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        color: rgba(255,255,255,0.7);
-        font-size: 0.8rem;
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-
-    .stats-card:hover::after {
-        opacity: 1;
-    }
-
-    /* Table styling */
-    .table {
-        margin-bottom: 0;
-    }
-
-    .table th {
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-        color: var(--primary-color);
-    }
-
-    .table td {
-        vertical-align: middle;
-    }
-
-    .btn {
-        border-radius: 8px;
-        padding: 8px 16px;
-        transition: all 0.3s;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-    }
-
-    /* Profile section */
-    .profile-icon {
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 15px;
-        background: rgba(52, 152, 219, 0.1);
-        transition: all 0.3s;
-    }
-
-    .profile-icon:hover {
-        transform: scale(1.1);
-        background: rgba(52, 152, 219, 0.2);
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        #content.active {
-            margin-left: 0;
-        }
-        
-        #sidebar {
-            margin-left: -280px;
-        }
-        
-        #sidebar.active {
-            margin-left: 0;
-        }
-
-        .card-header {
-            flex-direction: column;
-        }
-
-        .card-header form {
-            margin-top: 15px;
-            width: 100%;
-        }
-
-        .stats-card {
-            min-height: 180px;
-        }
-
-        .stats-card h6.text-uppercase {
-            font-size: 1.2rem;
-        }
-
-        .stats-card h2.mb-0 {
-            font-size: 3rem;
-        }
-
-        .stats-card i.fa-3x {
-            font-size: 3.5rem;
-        }
-    }
-
-    /* Custom scrollbar for sidebar */
-    #sidebar::-webkit-scrollbar {
-        width: 5px;
-    }
-
-    #sidebar::-webkit-scrollbar-track {
-        background: rgba(255,255,255,0.1);
-    }
-
-    #sidebar::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.2);
-        border-radius: 3px;
-    }
-
-    #sidebar::-webkit-scrollbar-thumb:hover {
-        background: rgba(255,255,255,0.3);
-    }
-
-    /* Stats cards */
-    .col-md-4:nth-child(1) .card {
-        background: var(--primary-gradient);
-    }
-
-    .col-md-4:nth-child(2) .card {
-        background: linear-gradient(135deg, var(--primary-color) 0%, #3a6fc9 100%);
-    }
-
-    .col-md-4:nth-child(3) .card {
-        background: linear-gradient(135deg, #3a6fc9 0%, var(--primary-color) 100%);
-    }
-
-    /* Buttons */
-    .btn-primary {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
-    }
-
-    .btn-primary:hover {
-        background: var(--primary-light);
-        border-color: var(--primary-light);
-    }
-
-    .btn-info {
-        background: var(--primary-light);
-        border-color: var(--primary-light);
-    }
-
-    /* Text colors */
-    .text-primary {
-        color: var(--primary-color) !important;
-    }
-
-    /* Badge */
-    .badge.bg-primary {
-        background: var(--primary-color) !important;
-    }
-
-    /* Profile icons */
-    .profile-icon i,
-    .bg-light i.text-primary {
-        color: var(--primary-color) !important;
-    }
-
-    /* Table hover */
-    .table-hover tbody tr:hover {
-        background-color: rgba(30, 60, 114, 0.05);
-    }
-
-    /* Card headers */
-    .card-header.bg-white {
-        border-bottom: 2px solid rgba(30, 60, 114, 0.1);
-    }
-
-    /* Form elements */
-    .form-control:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.25);
-    }
-
-    .form-select:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.25);
-    }
-
-    /* Profile section icons */
-    .bg-light.p-3 {
-        background: rgba(30, 60, 114, 0.1) !important;
-    }
-
-    .bg-light.p-3:hover {
-        background: rgba(30, 60, 114, 0.15) !important;
-    }
-
-    /* Overlay color */
-    .overlay.active {
-        background: rgba(30, 60, 114, 0.7);
-    }
-
-    /* Additional hover effects */
-    .btn-primary:hover {
-        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
-    }
-
-    .stats-card:hover {
-        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.2);
-    }
-
-    /* Alert modifications */
-    .alert-warning {
-        border-left: 4px solid var(--primary-color);
-    }
-
-    /* Search button in header */
-    .input-group .btn-primary {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
-    }
-
-    .input-group .btn-primary:hover {
-        background: var(--primary-light);
-        border-color: var(--primary-light);
-    }
-
-    /* Dropdown menu */
-    .dropdown-item:active,
-    .dropdown-item:focus {
-        background-color: var(--primary-color);
-    }
-
-    /* Active nav indication */
-    .nav-link.active {
-        position: relative;
-    }
-
-    .nav-link.active::after {
-        content: '';
-        position: absolute;
-        right: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #fff;
-    }
-
-    /* Style cho navbar duy nhất */
+    /* Navbar styles */
     .main-navbar {
         background: #1e3c72;
         background: linear-gradient(to right, #1e3c72, #2a5298);
@@ -454,7 +507,6 @@
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
-    /* Container cho navbar */
     .navbar-container {
         display: flex;
         align-items: center;
@@ -465,27 +517,6 @@
         height: 100%;
     }
 
-    /* Style cho phần bên trái (toggle button) */
-    #sidebarCollapse {
-        background: transparent;
-        border: none;
-        color: white;
-        padding: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-    }
-
-    #sidebarCollapse:hover {
-        transform: scale(1.1);
-    }
-
-    #sidebarCollapse i {
-        font-size: 1.8rem;
-    }
-
-    /* Style cho tiêu đề trung tâm */
     .navbar-center {
         position: absolute;
         left: 50%;
@@ -509,7 +540,611 @@
         }
 
         .nav-title {
-            font-size: 1.4rem;
+        font-size: 1.4rem;
+        }
+    }
+
+    /* Close button styles */
+    .sidebar-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar-close:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+
+    /* Button gradient styles */
+    .btn-gradient {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(30, 60, 114, 0.2);
+    }
+
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+        color: white;
+    }
+
+    .btn-gradient-secondary {
+        background: var(--secondary-gradient);
+        border: none;
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(33, 147, 176, 0.2);
+    }
+
+    .btn-gradient-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(33, 147, 176, 0.3);
+        color: white;
+    }
+
+    /* Table styles update */
+    .table th {
+        background: var(--primary-gradient);
+        color: white;
+        font-weight: 600;
+        padding: 1rem 1.5rem;
+        border: none;
+    }
+
+    .badge.bg-primary {
+        background: var(--primary-gradient) !important;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+
+    /* Card header update */
+    .card-header.bg-white {
+        background: var(--primary-gradient) !important;
+        border-bottom: none;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .card-header .text-primary {
+        color: white !important;
+    }
+
+    /* Search form styles */
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid rgba(30, 60, 114, 0.1);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.15);
+    }
+
+    .form-select {
+        border-radius: 8px;
+        border: 1px solid rgba(30, 60, 114, 0.1);
+        background-color: white;
+    }
+
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.15);
+    }
+
+    /* Search button */
+    .input-group .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+        padding: 0.5rem 1rem;
+        box-shadow: 0 2px 8px rgba(30, 60, 114, 0.2);
+    }
+
+    .input-group .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+    }
+
+    /* Card shadow enhancement */
+    .card.shadow-sm {
+        box-shadow: 0 5px 20px rgba(30, 60, 114, 0.08) !important;
+        border: none;
+    }
+
+    /* Table hover effect */
+    .table-hover tbody tr:hover {
+        background: rgba(30, 60, 114, 0.02);
+    }
+
+    /* Table header gradient styles */
+    .table-header-gradient th {
+        background: var(--primary-gradient) !important;
+        color: white;
+        font-weight: 500;
+        padding: 1.2rem 1.5rem;
+        border: none;
+        white-space: nowrap;
+        position: relative;
+    }
+
+    .table-header-gradient th:first-child {
+        border-top-left-radius: 8px;
+    }
+
+    .table-header-gradient th:last-child {
+        border-top-right-radius: 8px;
+    }
+
+    /* Hover effect for table rows */
+    .table-hover tbody tr:hover {
+        background: rgba(30, 60, 114, 0.03);
+        transition: all 0.3s ease;
+    }
+
+    /* Table cell padding and alignment */
+    .table td {
+        padding: 1.2rem 1.5rem;
+        vertical-align: middle;
+        border-color: rgba(30, 60, 114, 0.08);
+    }
+
+    /* Badge styling update */
+    .badge.bg-primary {
+        background: var(--primary-gradient) !important;
+        padding: 0.6rem 1rem;
+        font-weight: 500;
+        border-radius: 30px;
+        box-shadow: 0 2px 8px rgba(30, 60, 114, 0.15);
+    }
+
+    /* Remove existing table header styles */
+    .table th {
+        background: var(--primary-gradient);
+        color: white;
+        font-weight: 600;
+        padding: 1rem 1.5rem;
+        border: none;
+    }
+
+    /* Card header styling update */
+    .card-header.bg-white {
+        background: var(--primary-gradient) !important;
+        padding: 1.5rem;
+        border-bottom: none;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .card-header .text-primary {
+        color: white !important;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Table container styling */
+    .table-responsive {
+        border-radius: 8px;
+        background: white;
+    }
+
+    /* Card header và table header styling */
+    .card-header {
+        background: var(--primary-gradient) !important;
+        border-bottom: none;
+        border-radius: 15px 15px 0 0;
+        padding: 1.5rem !important;
+    }
+
+    .card-header .text-white {
+        color: white !important;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Table header styling */
+    .table-header-gradient th {
+        background: var(--primary-gradient) !important;
+        color: white;
+        font-weight: 500;
+        padding: 1.2rem 1.5rem;
+        border: none;
+        white-space: nowrap;
+    }
+
+    /* Loại bỏ border radius của header table khi nằm trong card */
+    .card .table-header-gradient th:first-child {
+        border-radius: 0;
+    }
+
+    .card .table-header-gradient th:last-child {
+        border-radius: 0;
+    }
+
+    /* Search button in white */
+    .card-header .btn-light {
+        background: white;
+        border: none;
+        color: var(--primary-color);
+        transition: all 0.3s ease;
+    }
+
+    .card-header .btn-light:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-2px);
+    }
+
+    /* Form controls in header */
+    .card-header .form-control,
+    .card-header .form-select {
+        border: none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header .form-control:focus,
+    .card-header .form-select:focus {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Table container */
+    .table-responsive {
+        background: white;
+        border-radius: 0 0 8px 8px;
+    }
+
+    /* Remove duplicate styles */
+    .table th {
+        background: transparent;
+    }
+
+    /* Ensure consistent text color in table header */
+    .table thead th {
+        color: white !important;
+    }
+
+    /* Table header gradient styling */
+    .table-gradient-header {
+        background: var(--primary-gradient) !important;
+    }
+
+    .table-gradient-header th {
+        background: transparent !important;
+        color: white !important;
+        font-weight: 500;
+        padding: 1.2rem 1.5rem;
+        border: none;
+        position: relative;
+        vertical-align: middle;
+    }
+
+    /* Remove all individual background colors from th elements */
+    .table th,
+    .table-header-gradient th,
+    .table thead th {
+        background: transparent !important;
+    }
+
+    /* Ensure the entire header row has the gradient */
+    .table thead tr {
+        background: var(--primary-gradient) !important;
+    }
+
+    /* Add subtle transition effect */
+    .table thead th {
+        transition: all 0.3s ease;
+    }
+
+    /* Optional: Add hover effect on header cells */
+    .table thead th:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Ensure text contrast */
+    .table thead th {
+        color: white !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Remove any border between header cells */
+    .table thead th {
+        border: none !important;
+    }
+
+    /* Add subtle box shadow to entire header */
+    .table thead {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Table header white background styling */
+    .table-white-header {
+        background: white !important;
+    }
+
+    .table-white-header th {
+        background-color: rgba(255, 255, 255, 0.7);
+        color: var(--primary-color) !important;
+        font-weight: 700;
+        padding: 1.2rem 1.5rem;
+        border-bottom: 2px solid rgba(30, 60, 114, 0.1) !important;
+        position: relative;
+        vertical-align: middle;
+        font-size: 1 rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Remove existing gradient styles for this table header */
+    .table thead tr,
+    .table thead th {
+        background: white !important;
+        text-shadow: none;
+    }
+
+    /* Add subtle hover effect */
+    .table-white-header th:hover {
+        background: rgba(30, 60, 114, 0.02) !important;
+        color: var(--primary-color) !important;
+    }
+
+    /* Remove any conflicting styles */
+    .table th,
+    .table-header-gradient th,
+    .table thead th {
+        background: white !important;
+        border: none;
+    }
+
+    /* Ensure text color */
+    .table thead th {
+        color: var(--primary-color) !important;
+    }
+
+    /* Optional: Add subtle transition */
+    .table thead th {
+        transition: all 0.3s ease;
+    }
+
+    /* Remove box shadow */
+    .table thead {
+        box-shadow: none;
+    }
+
+    /* Add border bottom to header */
+    .table thead {
+        border-bottom: 2px solid rgba(30, 60, 114, 0.1);
+    }
+
+    /* Info Card Styles */
+    .info-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .info-card-header {
+        padding: 1.5rem;
+        background: var(--primary-gradient);
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .info-card-header .icon-box {
+        width: 45px;
+        height: 45px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .info-card-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .info-card-body {
+        padding: 2rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .info-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .info-item i {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        width: 40px;
+        height: 40px;
+        background: white;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .info-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-content label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0.2rem;
+    }
+
+    .info-content span {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    /* Student Card Styles */
+    .student-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .student-card-header {
+        padding: 1.5rem;
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .card-title {
+        margin: 0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-return {
+        background: white;
+        color: var(--primary-color);
+    }
+
+    .btn-grades {
+        background: var(--secondary-gradient);
+        color: white;
+    }
+
+    .btn-modern:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Table Styles */
+    .table-container {
+        padding: 1.5rem;
+    }
+
+    .custom-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .custom-table thead th {
+        background: #f8f9fa;
+        color: var(--primary-color);
+        font-weight: 600;
+        padding: 1rem;
+        border: none;
+    }
+
+    .custom-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .custom-table tbody tr:hover {
+        background: rgba(30,60,114,0.02);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem !important;
+    }
+
+    .empty-state-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        color: #6c757d;
+    }
+
+    .empty-state-content i {
+        font-size: 3rem;
+        color: var(--primary-color);
+    }
+
+    /* Student Count */
+    .student-count {
+        padding: 1rem 1.5rem;
+        background: #f8f9fa;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .count-label {
+        color: #6c757d;
+    }
+
+    .count-number {
+        font-weight: 600;
+        color: var(--primary-color);
+        background: white;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .info-card-body .row {
+            gap: 1rem !important;
         }
     }
 </style>
@@ -517,58 +1152,52 @@
 
 {% block content %}
 <!-- Navbar duy nhất -->
-<nav class="main-navbar">
-    <div class="navbar-container">
-        <div class="navbar-left">
-            <button id="sidebarCollapse">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
-
-        <div class="navbar-center">
-            <span class="nav-title">HỆ THỐNG QUẢN LÝ ĐIỂM</span>
-        </div>
-    </div>
-</nav>
+<!-- Sidebar Toggle Button -->
+<button id="sidebarCollapse">
+    <i class="fas fa-bars"></i>
+</button>
 
 <!-- Sidebar -->
 <nav id="sidebar">
-    <div class="sidebar-header">
-        <div class="user-avatar">
-            <i class="fas fa-user fa-2x text-white"></i>
-        </div>
-        <div class="user-info">
-            <h6 class="mb-1">{{ teacher.user.get_full_name }}</h6>
-            <small class="text-white">Giáo viên</small>
-        </div>
-    </div>
+<div class="sidebar-header">
+<button class="sidebar-close" id="sidebarClose">
+<i class="fas fa-times"></i>
+</button>
+<div class="user-avatar">
+<i class="fas fa-user fa-2x text-white"></i>
+</div>
+<div class="user-info">
+<h6 class="mb-1">{{ teacher.user.get_full_name }}</h6>
+<small class="text-white">Giáo viên</small>
+</div>
+</div>
 
-    <ul class="nav flex-column mt-3">
-        <li class="nav-item">
-            <a href="{% url 'teacher_dashboard' %}" class="nav-link">
-                <i class="fas fa-tachometer-alt"></i>
-                Dashboard
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'teacher_profile' %}" class="nav-link">
-                <i class="fas fa-user-circle"></i>
-                Thông tin cá nhân
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'teacher_change_password' %}" class="nav-link">
-                <i class="fas fa-key"></i>
-                Đổi mật khẩu
-            </a>
-        </li>
-        <li class="nav-item mt-4">
-            <a href="{% url 'logout' %}" class="nav-link text-danger">
-                <i class="fas fa-sign-out-alt"></i>
-                Đăng xuất
-            </a>
-        </li>
-    </ul>
+<ul class="nav flex-column mt-3">
+<li class="nav-item">
+<a href="{% url 'teacher_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
+    <i class="fas fa-tachometer-alt"></i>
+    Dashboard
+</a>
+</li>
+<li class="nav-item">
+<a href="{% url 'teacher_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_profile' %}active{% endif %}">
+    <i class="fas fa-user-circle"></i>
+    Thông tin cá nhân
+</a>
+</li>
+<li class="nav-item">
+<a href="{% url 'teacher_change_password' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_change_password' %}active{% endif %}">
+    <i class="fas fa-key"></i>
+    Đổi mật khẩu
+</a>
+</li>
+<li class="nav-item mt-4">
+<a href="{% url 'logout' %}" class="nav-link text-danger">
+    <i class="fas fa-sign-out-alt"></i>
+    Đăng xuất
+</a>
+</li>
+</ul>
 </nav>
 
 <!-- Overlay -->
@@ -577,76 +1206,127 @@
 <!-- Main Content -->
 <div id="content">
     <div class="container-fluid">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-primary fw-bold">
-                        <i class="fas fa-users me-2"></i>Danh sách sinh viên: {{ assignment.classroom.name }}
-                    </h5>
-                    <div>
-                        <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-arrow-left me-1"></i>Quay lại Dashboard
-                        </a>
-                        <a href="{% url 'class_grades' assignment.id %}" class="btn btn-info btn-sm text-white ms-1">
-                            <i class="fas fa-edit me-1"></i>Quản lý điểm
-                        </a>
+        <!-- Hero section -->
+        <div class="hero-section">
+            <div class="container">
+                <div class="row justify-content-center text-center">
+                    <div class="col-md-8">
+                        <div class="hero-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h1 class="hero-title">DANH SÁCH SINH VIÊN</h1>
+                        <p class="hero-subtitle">{{ assignment.classroom.name }} - {{ assignment.subject.name }}</p>
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="info-card mb-4">
+                    <div class="info-card-header">
+                        <div class="icon-box">
+                            <i class="fas fa-info-circle"></i>
                         </div>
-                    {% endfor %}
-                {% endif %}
-                
-                <div class="mb-4">
-                    <h5 class="text-primary">Thông tin:</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Lớp:</strong> {{ assignment.classroom.name }} ({{ assignment.classroom.class_code }})</p>
-                            <p><strong>Môn học:</strong> {{ assignment.subject.name }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Học kỳ:</strong> {{ assignment.semester.name }}</p>
-                            <p><strong>Giáo viên:</strong> {{ assignment.teacher.user.get_full_name }}</p>
+                        <h5>Thông tin lớp học</h5>
+                    </div>
+                    <div class="info-card-body">
+                        <div class="row g-4">
+                            <div class="col-md-3">
+                                <div class="info-item">
+                                    <i class="fas fa-chalkboard"></i>
+                                    <div class="info-content">
+                                        <label>Lớp</label>
+                                        <span>{{ assignment.classroom.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-item">
+                                    <i class="fas fa-book"></i>
+                                    <div class="info-content">
+                                        <label>Môn học</label>
+                                        <span>{{ assignment.subject.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <div class="info-content">
+                                        <label>Học kỳ</label>
+                                        <span>{{ assignment.semester.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-item">
+                                    <i class="fas fa-user-tie"></i>
+                                    <div class="info-content">
+                                        <label>Giáo viên</label>
+                                        <span>{{ assignment.teacher.user.get_full_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th scope="col" width="10%">STT</th>
-                                <th scope="col" width="20%">Mã sinh viên</th>
-                                <th scope="col">Họ và tên</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for student in students %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ student.student_id }}</td>
-                                <td>{{ student.name }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-center py-4 text-muted">
-                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                    Không có sinh viên nào trong lớp này.
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="text-end mt-3">
-                    <p class="text-primary"><strong>Tổng số:</strong> {{ students|length }} sinh viên</p>
+
+                <div class="student-card">
+                    <div class="student-card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">
+                                <i class="fas fa-list me-2"></i>Danh sách sinh viên
+                            </h5>
+                            <div class="action-buttons">
+                                <a href="{% url 'teacher_dashboard' %}" class="btn-modern btn-return">
+                                    <i class="fas fa-arrow-left"></i>
+                                    <span>Quay lại</span>
+                                </a>
+                                <a href="{% url 'class_grades' assignment.id %}" class="btn-modern btn-grades">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Quản lý điểm</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="student-card-body">
+                        <div class="table-container">
+                            <table class="table custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã sinh viên</th>
+                                        <th>Họ và tên</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ student.student_id }}</td>
+                                        <td>{{ student.name }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="empty-state">
+                                            <div class="empty-state-content">
+                                                <i class="fas fa-user-graduate"></i>
+                                                <p>Không có sinh viên nào trong lớp này</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="student-count">
+                            <span class="count-label">Tổng số sinh viên:</span>
+                            <span class="count-number">{{ students|length }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -656,11 +1336,11 @@
 
 {% block extra_js %}
 <script>
-// Copy the JavaScript from dashboard.html
 document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
     const content = document.getElementById('content');
     const sidebarCollapse = document.getElementById('sidebarCollapse');
+    const sidebarClose = document.getElementById('sidebarClose');
     const overlay = document.querySelector('.overlay');
 
     function toggleSidebar() {
@@ -669,6 +1349,9 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.classList.toggle('active');
     }
 
+    // Thêm event listener cho nút đóng
+    sidebarClose.addEventListener('click', toggleSidebar);
+    
     sidebarCollapse.addEventListener('click', toggleSidebar);
     overlay.addEventListener('click', toggleSidebar);
 
