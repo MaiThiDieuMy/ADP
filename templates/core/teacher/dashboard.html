@@ -1046,6 +1046,7 @@
                                     <span class="badge bg-primary">{{ assignment.semester.name }}</span>
                                 </td>
                                 <td class="text-end px-4">
+                                    {% if assignment.id %}
                                     <a href="{% url 'class_grades' assignment.id %}" class="btn btn-gradient btn-sm me-1">
                                         <i class="fas fa-edit"></i>
                                         <span class="d-none d-md-inline ms-1">Quản lý điểm</span>
@@ -1054,13 +1055,16 @@
                                         <i class="fas fa-users"></i>
                                         <span class="d-none d-md-inline ms-1">Danh sách SV</span>
                                     </a>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
                                 <td colspan="4" class="text-center py-4 text-muted">
                                     <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                    Không tìm thấy lớp dạy nào.
+                                    {% if request.GET.semester %}
+                                        Không tìm thấy lớp dạy nào.
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -1111,7 +1115,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showGradeManagement() {
-    // Lấy assignment đầu tiên từ danh sách (nếu có)
     {% if assignments %}
         {% with first_assignment=assignments|first %}
             window.location.href = "{% url 'class_grades' first_assignment.id %}";
@@ -1122,13 +1125,17 @@ function showGradeManagement() {
 }
 
 function showClassDetails() {
-    // Chuyển đến trang danh sách lớp
-    window.location.href = "{% url 'teacher_class_students' assignments.0.id %}";
+    {% if assignments %}
+        {% with first_assignment=assignments|first %}
+            window.location.href = "{% url 'teacher_class_students' first_assignment.id %}";
+        {% endwith %}
+    {% else %}
+        alert('Không có lớp học nào được phân công.');
+    {% endif %}
 }
 
 function showSemesterDetails() {
-    // Chuyển đến trang quản lý điểm của học kỳ hiện tại
-    {% if active_semesters %}
+    {% if assignments %}
         {% with first_assignment=assignments|first %}
             window.location.href = "{% url 'class_grades' first_assignment.id %}";
         {% endwith %}
@@ -1138,7 +1145,6 @@ function showSemesterDetails() {
 }
 
 function showSubjectDetails() {
-    // Chuyển đến trang quản lý điểm
     {% if assignments %}
         {% with first_assignment=assignments|first %}
             window.location.href = "{% url 'class_grades' first_assignment.id %}";
