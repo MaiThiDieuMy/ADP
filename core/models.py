@@ -49,7 +49,7 @@ class TeacherAssignment(models.Model):
 class Student(models.Model):
     student_id = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=100)
-    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
+    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, null=True, blank=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True)
     
@@ -63,7 +63,7 @@ class GradeType(models.Model):
         return self.name
 
 class Grade(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='grades')
     teacher_assignment = models.ForeignKey(TeacherAssignment, on_delete=models.CASCADE)
     grade_type = models.ForeignKey(GradeType, on_delete=models.CASCADE)
     value = models.FloatField()

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Thông tin cá nhân - Hệ thống Quản lý Điểm Sinh viên{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div style="background-color: #1a237e;" class="text-white py-4 mb-4">
+    <div class="container text-center">
+        <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-10 rounded-circle p-3 mb-2">
+            <i class="fas fa-user text-white fa-2x"></i>
+        </div>
+        <h4 class="text-uppercase mb-1">THÔNG TIN CÁ NHÂN</h4>
+        <p class="mb-0 text-white-50">{{ student.name }} - {{ student.student_id }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-id-card text-primary me-2"></i>
+                                    <span>Mã sinh viên</span>
+                                </label>
+                                <input type="text" class="form-control" value="{{ student.student_id }}" readonly>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-user text-primary me-2"></i>
+                                    <span>Họ và tên</span>
+                                </label>
+                                <input type="text" class="form-control" value="{{ student.name }}" readonly>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-envelope text-primary me-2"></i>
+                                    <span>Email</span>
+                                    <span class="text-danger ms-1">*</span>
+                                </label>
+                                <input type="email" class="form-control {% if form_errors.email %}is-invalid{% endif %}"
+                                       name="email" value="{{ student.email }}" required>
+                                {% if form_errors.email %}
+                                    <div class="invalid-feedback">{{ form_errors.email.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-phone text-primary me-2"></i>
+                                    <span>Số điện thoại</span>
+                                </label>
+                                <input type="tel" class="form-control {% if form_errors.phone %}is-invalid{% endif %}"
+                                       name="phone" value="{{ student.phone }}" pattern="[0-9]{10}">
+                                {% if form_errors.phone %}
+                                    <div class="invalid-feedback">{{ form_errors.phone.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Số điện thoại phải có 10 chữ số
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save me-2"></i>Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 10) {
+        value = value.slice(0, 10);
+    }
+    e.target.value = value;
+});
+</script>
+{% endblock %} 

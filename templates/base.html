@@ -80,13 +80,13 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" 
-                               href="{% url 'admin_dashboard' %}">
-                                <i class="fas fa-tachometer-alt"></i>Dashboard
-                            </a>
-                        </li>
                         {% if user.is_superuser %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" 
+                                   href="{% url 'admin_dashboard' %}">
+                                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link {% if 'teacher' in request.path %}active{% endif %}" 
                                    href="{% url 'teacher_list' %}">
@@ -121,6 +121,25 @@
                                 <a class="nav-link {% if 'assignment' in request.path %}active{% endif %}" 
                                    href="{% url 'teacher_assignment_list' %}">
                                     <i class="fas fa-tasks"></i>Phân công
+                                </a>
+                            </li>
+                        {% elif user.student %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'student_profile' in request.path %}active{% endif %}" 
+                                   href="{% url 'student_profile' %}">
+                                    <i class="fas fa-user"></i>Thông tin cá nhân
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'student_grades' in request.path %}active{% endif %}" 
+                                   href="{% url 'student_grades' %}">
+                                    <i class="fas fa-graduation-cap"></i>Bảng điểm
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'change_password' in request.path %}active{% endif %}" 
+                                   href="{% url 'student_change_password' %}">
+                                    <i class="fas fa-key"></i>Đổi mật khẩu
                                 </a>
                             </li>
                         {% endif %}

@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}Bảng điểm - {{ student.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .grade-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .grade-card-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        padding: 1.5rem;
+        font-weight: 600;
+    }
+
+    .grade-card-body {
+        padding: 1.5rem;
+    }
+
+    .semester-section {
+        margin-bottom: 2rem;
+    }
+
+    .semester-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #2d3748;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .subject-card {
+        background: #f8fafc;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .subject-name {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+
+    .subject-teacher {
+        font-size: 0.9rem;
+        color: #718096;
+        margin-bottom: 1rem;
+    }
+
+    .grade-table {
+        width: 100%;
+        margin-top: 0.5rem;
+        border-collapse: collapse;
+    }
+
+    .grade-table th {
+        background: #edf2f7;
+        padding: 0.75rem;
+        font-weight: 500;
+        color: #4a5568;
+        text-align: left;
+        border: 1px solid #e2e8f0;
+    }
+
+    .grade-table td {
+        padding: 0.75rem;
+        border: 1px solid #e2e8f0;
+        background: white;
+    }
+
+    .grade-value {
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .grade-pending {
+        color: #a0aec0;
+        font-style: italic;
+    }
+
+    .grade-date {
+        font-size: 0.85rem;
+        color: #718096;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #718096;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+        color: #a0aec0;
+    }
+
+    .student-info {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .student-info p {
+        margin: 0;
+        color: #4a5568;
+    }
+
+    .student-info strong {
+        color: #2d3748;
+    }
+
+    .subject-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-item i {
+        margin-right: 0.5rem;
+    }
+
+    .final-grade {
+        background: #ebf8ff;
+        font-weight: 600;
+    }
+
+    .final-grade th {
+        background: #bee3f8;
+        color: #2c5282;
+    }
+
+    .final-grade td {
+        background: #ebf8ff;
+        color: #2c5282;
+    }
+
+    .letter-grade {
+        font-weight: 600;
+        padding-left: 0.5rem;
+        color: #2c5282;
+    }
+
+    .grade-A { color: #2f855a; }
+    .grade-B { color: #2c5282; }
+    .grade-C { color: #744210; }
+    .grade-D { color: #c05621; }
+    .grade-F { color: #c53030; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="grade-card">
+        <div class="grade-card-header">
+            <h4 class="mb-0">
+                <i class="fas fa-graduation-cap me-2"></i>
+                Bảng điểm
+            </h4>
+        </div>
+        <div class="grade-card-body">
+            <!-- Student Info -->
+            <div class="student-info">
+                <p><strong>Họ và tên:</strong> {{ student.name }}</p>
+                <p><strong>Mã sinh viên:</strong> {{ student.student_id }}</p>
+            </div>
+
+            {% if grouped_subjects %}
+                {% for semester, subjects in grouped_subjects.items %}
+                <div class="semester-section">
+                    <h5 class="semester-header">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {{ semester.name }}
+                    </h5>
+                    
+                    {% for subject_data in subjects %}
+                    <div class="subject-card">
+                        <div class="subject-name">{{ subject_data.subject.name }}</div>
+                        <div class="subject-info">
+                            <div class="info-item">
+                                <i class="fas fa-chalkboard-teacher me-1"></i>
+                                Giảng viên: {{ subject_data.teacher.user.get_full_name }}
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-users me-1"></i>
+                                Lớp: {{ subject_data.classroom.name }}
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="grade-table">
+                                <thead>
+                                    <tr>
+                                        {% for grade_type in grade_types %}
+                                            <th>{{ grade_type.name }}</th>
+                                        {% endfor %}
+                                        <th class="final-grade">Điểm tổng kết</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        {% for grade in subject_data.grades %}
+                                            <td>
+                                                {% if grade.value is not None %}
+                                                    <div class="grade-value">{{ grade.value }}</div>
+                                                    {% if grade.updated_at %}
+                                                        <div class="grade-date">
+                                                            Cập nhật: {{ grade.updated_at|date:"d/m/Y H:i" }}
+                                                        </div>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <div class="grade-pending">Chưa có điểm</div>
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                        <td class="final-grade">
+                                            {% if subject_data.final_grade is not None %}
+                                                <div class="grade-value">
+                                                    {{ subject_data.final_grade }}
+                                                    <span class="letter-grade grade-{{ subject_data.letter_grade }}">({{ subject_data.letter_grade }})</span>
+                                                </div>
+                                            {% else %}
+                                                <div class="grade-pending">Chưa đủ điểm</div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-book"></i>
+                    <p>Bạn chưa tham gia lớp học nào.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

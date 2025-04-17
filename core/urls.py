@@ -58,4 +58,9 @@ urlpatterns = [
     path('teacher/assignments/<int:assignment_id>/bulk-update/', views.bulk_update_grades, name='bulk_update_grades'),
     path('teacher/assignments/<int:assignment_id>/upload/', views.upload_grades, name='upload_grades'),
     path('teacher/assignments/<int:assignment_id>/download/', views.download_grades, name='download_grades'),
+    
+    # Student routes
+    path('student/profile/', views.student_profile, name='student_profile'),
+    path('student/grades/', views.student_grades, name='student_grades'),
+    path('student/change-password/', views.student_change_password, name='student_change_password'),
 ] 

@@ -23,89 +23,6 @@
         --text-light: rgba(255, 255, 255, 0.8);
     }
 
-    /* Sidebar styles */
-    #sidebar {
-        position: fixed;
-        left: -280px;
-        top: 0;
-        height: 100%;
-        width: 280px;
-        background: var(--primary-gradient);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: 1000;
-        overflow-y: auto;
-        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
-    }
-
-    #sidebar.active {
-        left: 0;
-    }
-
-    .sidebar-header {
-        padding: 30px 20px;
-        background: rgba(0, 0, 0, 0.1);
-        text-align: center;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .nav-link {
-        color: var(--text-light);
-        padding: 12px 20px;
-        display: flex;
-        align-items: center;
-        transition: all 0.3s;
-        border-radius: 8px;
-        margin: 4px 12px;
-    }
-
-    .nav-link:hover, .nav-link.active {
-        background: rgba(255,255,255,0.1);
-        color: white;
-    }
-
-    .nav-link i {
-        margin-right: 10px;
-        width: 20px;
-        text-align: center;
-    }
-
-    /* Content styles */
-    .hero-section {
-        background: var(--primary-gradient);
-        color: white;
-        padding: 2.5rem 0;
-        margin-bottom: 2rem;
-        border-radius: 0 0 2rem 2rem;
-        box-shadow: 0 4px 30px rgba(0,0,0,0.15);
-        position: relative;
-        overflow: hidden;
-        text-align: center;
-    }
-
-    .hero-icon {
-        width: 80px;
-        height: 80px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1rem;
-        font-size: 2rem;
-        color: white;
-    }
-
-    .hero-title {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    .hero-subtitle {
-        font-size: 1.1rem;
-        opacity: 0.9;
-    }
-
     /* Form styles */
     .form-section {
         max-width: 800px;
@@ -181,6 +98,42 @@
     .btn-secondary:hover {
         background: #f7fafc;
     }
+
+    .hero-section {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 30px rgba(0,0,0,0.15);
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    .hero-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
 </style>
 {% endblock %}
 
@@ -197,31 +150,32 @@
 <!-- Form Section -->
 <div class="container">
     <div class="form-section">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <form method="post" novalidate>
             {% csrf_token %}
             
-            <!-- Username -->
+            <!-- Student ID -->
             <div class="form-group">
                 <label class="form-label" for="student_id">
-                    <i class="fas fa-user me-2"></i>Mã sinh viên <span class="text-danger">*</span>
+                    <i class="fas fa-id-card me-2"></i>Mã sinh viên <span class="text-danger">*</span>
                 </label>
                 <input type="text" class="form-control" id="student_id" name="student_id" required>
             </div>
 
             <!-- Name -->
-            <div class="row">
-                <div class="col-md-6 form-group">
-                    <label class="form-label" for="first_name">
-                        <i class="fas fa-user me-2"></i>Tên <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" class="form-control" id="first_name" name="first_name" required>
-                </div>
-                <div class="col-md-6 form-group">
-                    <label class="form-label" for="last_name">
-                        <i class="fas fa-user me-2"></i>Họ <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" class="form-control" id="last_name" name="last_name" required>
-                </div>
+            <div class="form-group">
+                <label class="form-label" for="name">
+                    <i class="fas fa-user me-2"></i>Họ và tên <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="name" name="name" required>
             </div>
 
             <!-- Email -->
@@ -234,23 +188,10 @@
 
             <!-- Phone -->
             <div class="form-group">
-                <label class="form-label" for="phone">
+                <label class="form-label" for="phone_number">
                     <i class="fas fa-phone me-2"></i>Số điện thoại
                 </label>
-                <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}">
-            </div>
-
-            <!-- Classroom -->
-            <div class="form-group">
-                <label class="form-label" for="classroom">
-                    <i class="fas fa-chalkboard me-2"></i>Lớp <span class="text-danger">*</span>
-                </label>
-                <select class="form-control" id="classroom" name="classroom" required>
-                    <option value="">Chọn lớp</option>
-                    {% for classroom in classrooms %}
-                    <option value="{{ classroom.id }}">{{ classroom.name }}</option>
-                    {% endfor %}
-                </select>
+                <input type="tel" class="form-control" id="phone_number" name="phone_number" maxlength="10">
             </div>
 
             <!-- Password Info -->
@@ -275,10 +216,10 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
-    const inputs = form.querySelectorAll('input[required], select[required]');
+    const inputs = form.querySelectorAll('input[required]');
     
     // Phone number validation
-    const phoneInput = document.getElementById('phone');
+    const phoneInput = document.getElementById('phone_number');
     phoneInput.addEventListener('input', function(e) {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 10) value = value.slice(0, 10);

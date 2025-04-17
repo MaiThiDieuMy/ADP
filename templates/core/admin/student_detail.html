@@ -226,23 +226,19 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">Email</div>
-                        <div class="info-value">{{ student.email|default:"Chưa cập nhật" }}</div>
+                        <div class="info-value">{{ student.user.email|default:"Chưa cập nhật" }}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Số điện thoại</div>
-                        <div class="info-value">{{ student.phone_number|default:"Chưa cập nhật" }}</div>
+                        <div class="info-value">{{ student.phone|default:"Chưa cập nhật" }}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Trạng thái tài khoản</div>
                         <div class="info-value">
-                            {% if student.user %}
-                            <span class="badge badge-success">
-                                <i class="fas fa-check-circle me-1"></i>Đã kích hoạt
-                            </span>
+                            {% if student.user and student.user.is_active %}
+                                <span class="badge bg-success">Đã kích hoạt</span>
                             {% else %}
-                            <span class="badge badge-warning">
-                                <i class="fas fa-exclamation-circle me-1"></i>Chưa kích hoạt
-                            </span>
+                                <span class="badge bg-danger">Chưa kích hoạt</span>
                             {% endif %}
                         </div>
                     </div>

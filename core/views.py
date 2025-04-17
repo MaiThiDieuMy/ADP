@@ -10,6 +10,7 @@ import openpyxl
 import json
 from urllib.parse import quote
 from django.db.models import Q
+from django.core.exceptions import PermissionDenied
 
 
 from .models import (
@@ -34,27 +35,38 @@ def home(request):
 
 def login_view(request):
     if request.method == 'POST':
-        form = CustomAuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        if not username or not password:
+            messages.error(request, 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu')
+            return redirect('login')
+            
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            if user.is_active:
                 login(request, user)
-                if is_admin(user):
+                
+                # Redirect based on user type
+                if user.is_superuser:
                     return redirect('admin_dashboard')
-                elif is_teacher(user):
-                    if user.teacher.is_active:
-                        return redirect('teacher_dashboard')
-                    else:
-                        messages.error(request, 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ admin.')
-                        return redirect('login')
+                elif hasattr(user, 'teacher'):
+                    return redirect('teacher_dashboard')
+                elif hasattr(user, 'student'):
+                    return redirect('student_profile')
+                else:
+                    messages.error(request, 'Tài khoản không có quyền truy cập')
+                    logout(request)
+                    return redirect('login')
             else:
-                messages.error(request, 'Tên đăng nhập hoặc mật khẩu không chính xác.')
-    else:
-        form = CustomAuthenticationForm()
-    
-    return render(request, 'core/login.html', {'form': form})
+                messages.error(request, 'Tài khoản đã bị khóa')
+                return redirect('login')
+        else:
+            messages.error(request, 'Sai tên đăng nhập hoặc mật khẩu')
+            return redirect('login')
+            
+    return render(request, 'core/login.html')
 
 def logout_view(request):
     logout(request)
@@ -290,10 +302,10 @@ def classroom_import_students(request, classroom_id):
                 for col in range(1, sheet.max_column + 1):
                     cell_value = sheet.cell(row=1, column=col).value
                     if cell_value:
-                        headers.append(cell_value)
+                        headers.append(cell_value.lower().strip())  # Normalize headers
                 
                 # Validate required columns
-                required_columns = ['student_id', 'name']
+                required_columns = ['student_id']
                 missing_columns = [col for col in required_columns if col not in headers]
                 
                 if missing_columns:
@@ -302,43 +314,54 @@ def classroom_import_students(request, classroom_id):
                     return redirect('classroom_detail', classroom_id=classroom.id)
                 
                 # Process data rows
-                added_count = 0
-                updated_count = 0
-                error_count = 0
+                accounts_created = 0
+                skipped_count = 0
+                not_found_count = 0
                 
                 # Start from the second row (after headers)
                 for row in range(2, sheet.max_row + 1):
                     try:
                         student_id = str(sheet.cell(row=row, column=headers.index('student_id') + 1).value).strip()
-                        name = str(sheet.cell(row=row, column=headers.index('name') + 1).value).strip()
                         
                         # Skip empty rows
-                        if not student_id or not name:
+                        if not student_id:
+                            skipped_count += 1
                             continue
-                        
-                        # Try to get existing student or create a new one
-                        student, created = Student.objects.update_or_create(
-                            student_id=student_id,
-                            defaults={
-                                'name': name,
-                                'classroom': classroom
-                            }
-                        )
-                        
-                        if created:
-                            added_count += 1
-                        else:
-                            updated_count += 1
+                            
+                        # Check if student exists in the system
+                        try:
+                            student = Student.objects.get(student_id=student_id)
+                            
+                            # Create user account if not exists
+                            if not student.user:
+                                user = User.objects.create_user(
+                                    username=student_id,
+                                    email=f"{student_id}@example.com",
+                                    password='password123'
+                                )
+                                student.user = user
+                                student.save()
+                                accounts_created += 1
+                            
+                        except Student.DoesNotExist:
+                            not_found_count += 1
+                            continue
                             
                     except Exception as e:
-                        error_count += 1
+                        print(f"Error processing row: {e}")
                         continue
                 
-                messages.success(
-                    request, 
-                    f'Đã import thành công: {added_count} sinh viên mới, {updated_count} sinh viên cập nhật. '
-                    f'Có {error_count} lỗi.'
-                )
+                # Prepare message
+                message_parts = []
+                if accounts_created > 0:
+                    message_parts.append(f"Đã tạo {accounts_created} tài khoản mới")
+                if not_found_count > 0:
+                    message_parts.append(f"{not_found_count} sinh viên không tồn tại trong hệ thống")
+                if skipped_count > 0:
+                    message_parts.append(f"{skipped_count} dòng bị bỏ qua (trống)")
+                
+                if message_parts:
+                    messages.success(request, ". ".join(message_parts) + ".")
                 
             except Exception as e:
                 messages.error(request, f"Lỗi khi xử lý file Excel: {str(e)}")
@@ -1330,11 +1353,11 @@ def student_edit(request, student_id):
                     user.username = student_id_new
                     user.save()
                 else:
-                    # Create new user
+                    # Create new user with default password
                     user = User.objects.create_user(
                         username=student_id_new,
                         email=email,
-                        password=student_id_new  # Default password is student_id
+                        password='password123'  # Changed to password123
                     )
                     student.user = user
             elif student.user:
@@ -1368,56 +1391,60 @@ def student_edit(request, student_id):
 @login_required
 @user_passes_test(is_admin)
 def student_create(request):
-    classrooms = ClassRoom.objects.all()
-    
     if request.method == 'POST':
-        student_id = request.POST.get('student_id')
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        phone_number = request.POST.get('phone_number')
-        classroom_id = request.POST.get('classroom')
-        
         try:
+            student_id = request.POST.get('student_id')
+            name = request.POST.get('name')
+            email = request.POST.get('email')
+            phone_number = request.POST.get('phone_number')
+            
             # Validate required fields
-            if not student_id or not name or not classroom_id:
-                raise ValueError("Vui lòng điền đầy đủ thông tin bắt buộc")
+            if not student_id:
+                messages.error(request, 'Vui lòng nhập mã sinh viên')
+                return render(request, 'core/admin/student_create.html')
+                
+            if not name:
+                messages.error(request, 'Vui lòng nhập họ tên sinh viên')
+                return render(request, 'core/admin/student_create.html')
             
-            # Check if student_id already exists
+            # Check if student_id already exists in Student model
             if Student.objects.filter(student_id=student_id).exists():
-                raise ValueError("Mã sinh viên đã tồn tại")
+                messages.error(request, f'Mã sinh viên {student_id} đã tồn tại trong hệ thống')
+                return render(request, 'core/admin/student_create.html')
+                
+            # Check if student_id already exists as a username
+            if User.objects.filter(username=student_id).exists():
+                messages.error(request, f'Mã sinh viên {student_id} đã được sử dụng làm tên đăng nhập')
+                return render(request, 'core/admin/student_create.html')
             
-            # Get classroom
-            classroom = get_object_or_404(ClassRoom, id=classroom_id)
+            # Create user account first
+            user = User.objects.create_user(
+                username=student_id,
+                password='password123',
+                email=email if email else f"{student_id}@example.com"
+            )
+            user.is_active = True
+            user.save()
             
-            # Create student
+            # Then create student record
             student = Student.objects.create(
+                user=user,
                 student_id=student_id,
                 name=name,
-                phone_number=phone_number,
-                classroom=classroom
+                phone=phone_number if phone_number else None
             )
             
-            # Create user account if email is provided
-            if email:
-                user = User.objects.create_user(
-                    username=student_id,
-                    email=email,
-                    password=student_id  # Default password is student_id
-                )
-                student.user = user
-                student.save()
-            
-            messages.success(request, f'Đã thêm sinh viên {name} thành công')
+            messages.success(request, f'Đã tạo tài khoản sinh viên {name} (Mã SV: {student_id}) thành công')
             return redirect('student_detail', student_id=student.id)
             
-        except ValueError as e:
-            messages.error(request, str(e))
         except Exception as e:
-            messages.error(request, f'Lỗi khi thêm sinh viên: {str(e)}')
+            # If something goes wrong, delete the user if it was created
+            if 'user' in locals():
+                user.delete()
+            messages.error(request, f'Lỗi khi tạo tài khoản sinh viên: {str(e)}')
+            return render(request, 'core/admin/student_create.html')
     
-    return render(request, 'core/admin/student_create.html', {
-        'classrooms': classrooms
-    })
+    return render(request, 'core/admin/student_create.html')
 
 @login_required
 @user_passes_test(is_admin)
@@ -1439,4 +1466,161 @@ def student_delete(request, student_id):
         messages.success(request, f'Đã xóa sinh viên {student_name} (Mã SV: {student_id_str})')
         return redirect('student_list')
     
-    return render(request, 'core/admin/student_confirm_delete.html', {'student': student}) 
+    return render(request, 'core/admin/student_confirm_delete.html', {'student': student})
+
+@login_required
+def student_profile(request):
+    if not hasattr(request.user, 'student'):
+        raise PermissionDenied
+        
+    student = request.user.student
+    form_errors = {}
+    
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        
+        # Validate email
+        if not email:
+            form_errors['email'] = ['Email là bắt buộc']
+        
+        # Validate phone (optional)
+        if phone and not phone.isdigit():
+            form_errors['phone'] = ['Số điện thoại chỉ được chứa chữ số']
+        elif phone and len(phone) != 10:
+            form_errors['phone'] = ['Số điện thoại phải có 10 chữ số']
+            
+        if not form_errors:
+            student.email = email
+            student.phone = phone
+            student.save()
+            messages.success(request, 'Cập nhật thông tin thành công')
+            return redirect('student_profile')
+            
+    return render(request, 'core/student/profile.html', {
+        'student': student,
+        'form_errors': form_errors
+    })
+
+@login_required
+def student_grades(request):
+    if not hasattr(request.user, 'student'):
+        raise PermissionDenied
+        
+    student = request.user.student
+    
+    # Get all teacher assignments for classes the student is enrolled in
+    teacher_assignments = TeacherAssignment.objects.filter(
+        classroom__student=student
+    ).select_related(
+        'subject',
+        'semester',
+        'teacher',
+        'classroom'
+    ).order_by(
+        'semester__name',
+        'subject__name'
+    )
+    
+    # Get all grade types
+    grade_types = GradeType.objects.all().order_by('name')
+    
+    # Get all grades for this student
+    grades = Grade.objects.filter(
+        student=student
+    ).select_related(
+        'teacher_assignment',
+        'grade_type'
+    )
+    
+    # Create a dictionary to store grades by assignment and type
+    grade_dict = {}
+    for grade in grades:
+        assignment_id = grade.teacher_assignment_id
+        if assignment_id not in grade_dict:
+            grade_dict[assignment_id] = {}
+        grade_dict[assignment_id][grade.grade_type_id] = grade
+    
+    # Group assignments by semester
+    grouped_subjects = {}
+    for assignment in teacher_assignments:
+        semester = assignment.semester
+        if semester not in grouped_subjects:
+            grouped_subjects[semester] = []
+            
+        # Get grades for each grade type
+        subject_grades = []
+        total_grade = 0
+        grade_count = 0
+        
+        for grade_type in grade_types:
+            grade = grade_dict.get(assignment.id, {}).get(grade_type.id)
+            if grade and grade.value is not None:
+                total_grade += grade.value
+                grade_count += 1
+                
+            subject_grades.append({
+                'type': grade_type.name,
+                'value': grade.value if grade else None,
+                'updated_at': grade.updated_at if grade else None
+            })
+        
+        # Calculate final grade
+        final_grade = round(total_grade / grade_count, 1) if grade_count > 0 else None
+        
+        # Convert to letter grade
+        letter_grade = None
+        if final_grade is not None:
+            if final_grade >= 8.5:
+                letter_grade = 'A'
+            elif final_grade >= 7.0:
+                letter_grade = 'B'
+            elif final_grade >= 5.5:
+                letter_grade = 'C'
+            elif final_grade >= 4.0:
+                letter_grade = 'D'
+            else:
+                letter_grade = 'F'
+            
+        grouped_subjects[semester].append({
+            'subject': assignment.subject,
+            'teacher': assignment.teacher,
+            'classroom': assignment.classroom,
+            'grades': subject_grades,
+            'final_grade': final_grade,
+            'letter_grade': letter_grade
+        })
+    
+    context = {
+        'student': student,
+        'grouped_subjects': grouped_subjects,
+        'grade_types': grade_types
+    }
+    
+    return render(request, 'core/student/grades.html', context)
+
+@login_required
+def student_change_password(request):
+    if not hasattr(request.user, 'student'):
+        raise PermissionDenied
+        
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if not request.user.check_password(old_password):
+            messages.error(request, 'Mật khẩu cũ không chính xác')
+        elif new_password != confirm_password:
+            messages.error(request, 'Mật khẩu mới không khớp')
+        elif len(new_password) < 8:
+            messages.error(request, 'Mật khẩu mới phải có ít nhất 8 ký tự')
+        else:
+            request.user.set_password(new_password)
+            request.user.save()
+            messages.success(request, 'Đổi mật khẩu thành công')
+            return redirect('login')
+            
+    return render(request, 'core/student/change_password.html', {
+        'student': request.user.student
+    }) 
