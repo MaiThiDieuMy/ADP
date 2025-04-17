@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+
+{% block title %}Chi tiết Sinh viên - Hệ thống Quản lý Điểm Sinh viên{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hide navigation bar */
+    .navbar {
+        display: none !important;
+    }
+
+    /* Adjust main content padding */
+    main {
+        padding-top: 0 !important;
+    }
+
+    :root {
+        --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        --secondary-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+        --accent-gradient: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        --success-gradient: linear-gradient(45deg, #2ecc71, #27ae60);
+        --primary-color: #1e3c72;
+        --text-light: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Content styles */
+    .hero-section {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 30px rgba(0,0,0,0.15);
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    .hero-icon {
+        width: 100px;
+        height: 100px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2.5rem;
+        color: white;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    /* Card styles */
+    .info-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .info-card-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1.5rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .info-card-body {
+        padding: 1.5rem;
+    }
+
+    .info-item {
+        margin-bottom: 1.5rem;
+    }
+
+    .info-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-value {
+        color: #2d3748;
+        padding: 0.75rem;
+        background: #f7fafc;
+        border-radius: 0.5rem;
+        border: 1px solid #edf2f7;
+    }
+
+    /* Table styles */
+    .table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .table th {
+        background: #f8fafc;
+        font-weight: 600;
+        padding: 1rem;
+        border-bottom: 2px solid #edf2f7;
+    }
+
+    .table td {
+        padding: 1rem;
+        border-bottom: 1px solid #edf2f7;
+        vertical-align: middle;
+    }
+
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .badge-primary {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .badge-success {
+        background: var(--success-gradient);
+        color: white;
+    }
+
+    /* Button styles */
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(30,60,114,0.3);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: #4a5568;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+        background: #f7fafc;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #718096;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+        color: #a0aec0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-icon">
+        <i class="fas fa-user-graduate"></i>
+    </div>
+    <h1 class="hero-title">{{ student.name }}</h1>
+    <p class="hero-subtitle">Mã sinh viên: {{ student.student_id }}</p>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Student Information -->
+        <div class="col-lg-6">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-info-circle me-2"></i>Thông tin sinh viên
+                </div>
+                <div class="info-card-body">
+                    <div class="info-item">
+                        <div class="info-label">Mã sinh viên</div>
+                        <div class="info-value">{{ student.student_id }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Họ và tên</div>
+                        <div class="info-value">{{ student.name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Email</div>
+                        <div class="info-value">{{ student.email|default:"Chưa cập nhật" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Số điện thoại</div>
+                        <div class="info-value">{{ student.phone_number|default:"Chưa cập nhật" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Trạng thái tài khoản</div>
+                        <div class="info-value">
+                            {% if student.user %}
+                            <span class="badge badge-success">
+                                <i class="fas fa-check-circle me-1"></i>Đã kích hoạt
+                            </span>
+                            {% else %}
+                            <span class="badge badge-warning">
+                                <i class="fas fa-exclamation-circle me-1"></i>Chưa kích hoạt
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrolled Classes -->
+        <div class="col-lg-6">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>Danh sách lớp học
+                </div>
+                <div class="info-card-body">
+                    {% if student.enrollments.all %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mã lớp</th>
+                                    <th>Tên lớp</th>
+                                    <th>Học kỳ</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for enrollment in student.enrollments.all %}
+                                <tr>
+                                    <td>{{ enrollment.classroom.class_code }}</td>
+                                    <td>{{ enrollment.classroom.name }}</td>
+                                    <td>{{ enrollment.classroom.semester.name }}</td>
+                                    <td>
+                                        <span class="badge badge-primary">
+                                            {% if enrollment.is_active %}
+                                            <i class="fas fa-check-circle me-1"></i>Đang học
+                                            {% else %}
+                                            <i class="fas fa-times-circle me-1"></i>Đã kết thúc
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-book"></i>
+                        <p>Sinh viên chưa tham gia lớp học nào.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="btn-group">
+        <a href="{% url 'student_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Quay lại
+        </a>
+        <a href="{% url 'student_edit' student.id %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i>
+            Chỉnh sửa
+        </a>
+    </div>
+</div>
+{% endblock %} 

@@ -9,6 +9,7 @@ from django.utils import timezone
 import openpyxl
 import json
 from urllib.parse import quote
+from django.db.models import Q
 
 
 from .models import (
@@ -69,13 +70,15 @@ def admin_dashboard(request):
     classrooms = ClassRoom.objects.all()
     semesters = Semester.objects.all()
     assignments = TeacherAssignment.objects.all()
+    students = Student.objects.all()
     
     return render(request, 'core/admin/dashboard.html', {
         'teachers': teachers,
         'subjects': subjects,
         'classrooms': classrooms,
         'semesters': semesters,
-        'assignments': assignments
+        'assignments': assignments,
+        'students': students
     })
 
 @login_required
@@ -1208,4 +1211,232 @@ def download_grades(request, assignment_id):
     # Save workbook to response
     wb.save(response)
     
-    return response 
+    return response
+
+@login_required
+@user_passes_test(is_admin)
+def student_list(request):
+    # Get all classrooms for the filter dropdown
+    classrooms = ClassRoom.objects.all().order_by('name')
+    
+    # Get the selected classroom filter
+    classroom_id = request.GET.get('classroom')
+    search_query = request.GET.get('search', '').strip()
+    
+    # Get sort parameters
+    sort_by = request.GET.get('sort', 'name')  # Default sort by name
+    sort_direction = request.GET.get('direction', 'asc')  # Default ascending
+    
+    # Start with all students
+    students = Student.objects.select_related('classroom').all()
+    
+    # Apply classroom filter if selected
+    if classroom_id:
+        students = students.filter(classroom_id=classroom_id)
+    
+    # Apply search filter if provided
+    if search_query:
+        students = students.filter(
+            Q(student_id__icontains=search_query) |
+            Q(name__icontains=search_query)
+        )
+    
+    # Apply sorting
+    if sort_by == 'student_id':
+        order_by = 'student_id'
+    elif sort_by == 'name':
+        order_by = 'name'
+    elif sort_by == 'classroom':
+        order_by = 'classroom__name'
+    else:
+        order_by = 'name'
+    
+    # Apply sort direction
+    if sort_direction == 'desc':
+        order_by = f'-{order_by}'
+    
+    students = students.order_by(order_by)
+    
+    context = {
+        'students': students,
+        'classrooms': classrooms,
+        'search_query': search_query,
+        'current_sort': sort_by,
+        'current_direction': sort_direction,
+        'classroom_id': classroom_id
+    }
+    
+    return render(request, 'core/admin/student_list.html', context)
+
+def student_detail(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    grades = Grade.objects.filter(student=student).order_by('-created_at')
+    
+    context = {
+        'student': student,
+        'grades': grades,
+    }
+    return render(request, 'core/admin/student_detail.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def student_edit(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    
+    if request.method == 'POST':
+        # Get form data
+        student_id_new = request.POST.get('student_id')
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        
+        # Validate form data
+        form_errors = {}
+        
+        # Check required fields
+        if not student_id_new:
+            form_errors['student_id'] = ['Mã sinh viên là bắt buộc']
+        if not name:
+            form_errors['name'] = ['Họ và tên là bắt buộc']
+            
+        # Check if student_id is unique (excluding current student)
+        if student_id_new != student.student_id and Student.objects.filter(student_id=student_id_new).exists():
+            form_errors['student_id'] = ['Mã sinh viên đã tồn tại']
+            
+        # Validate phone number if provided
+        if phone and not phone.isdigit():
+            form_errors['phone'] = ['Số điện thoại chỉ được chứa các chữ số']
+        elif phone and len(phone) != 10:
+            form_errors['phone'] = ['Số điện thoại phải có 10 chữ số']
+            
+        # Validate email if provided
+        if email and '@' not in email:
+            form_errors['email'] = ['Email không hợp lệ']
+            
+        # If there are no errors, save the changes
+        if not form_errors:
+            # Update student information
+            student.student_id = student_id_new
+            student.name = name
+            student.phone = phone
+            
+            # Handle user account
+            if email:
+                # Try to get existing user
+                user = None
+                if student.user:
+                    user = student.user
+                    user.email = email
+                    user.username = student_id_new
+                    user.save()
+                else:
+                    # Create new user
+                    user = User.objects.create_user(
+                        username=student_id_new,
+                        email=email,
+                        password=student_id_new  # Default password is student_id
+                    )
+                    student.user = user
+            elif student.user:
+                # If email is removed, delete the user account
+                student.user.delete()
+                student.user = None
+            
+            student.save()
+            messages.success(request, 'Thông tin sinh viên đã được cập nhật thành công')
+            return redirect('student_detail', student_id=student.id)
+            
+        # If there are errors, re-render form with errors
+        context = {
+            'student': student,
+            'form_errors': form_errors
+        }
+        return render(request, 'core/admin/student_edit.html', context)
+        
+    # For GET request, display form with current values
+    context = {
+        'student': {
+            'id': student.id,
+            'student_id': student.student_id,
+            'name': student.name,
+            'email': student.user.email if student.user else '',
+            'phone': student.phone or ''
+        }
+    }
+    return render(request, 'core/admin/student_edit.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def student_create(request):
+    classrooms = ClassRoom.objects.all()
+    
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone_number = request.POST.get('phone_number')
+        classroom_id = request.POST.get('classroom')
+        
+        try:
+            # Validate required fields
+            if not student_id or not name or not classroom_id:
+                raise ValueError("Vui lòng điền đầy đủ thông tin bắt buộc")
+            
+            # Check if student_id already exists
+            if Student.objects.filter(student_id=student_id).exists():
+                raise ValueError("Mã sinh viên đã tồn tại")
+            
+            # Get classroom
+            classroom = get_object_or_404(ClassRoom, id=classroom_id)
+            
+            # Create student
+            student = Student.objects.create(
+                student_id=student_id,
+                name=name,
+                phone_number=phone_number,
+                classroom=classroom
+            )
+            
+            # Create user account if email is provided
+            if email:
+                user = User.objects.create_user(
+                    username=student_id,
+                    email=email,
+                    password=student_id  # Default password is student_id
+                )
+                student.user = user
+                student.save()
+            
+            messages.success(request, f'Đã thêm sinh viên {name} thành công')
+            return redirect('student_detail', student_id=student.id)
+            
+        except ValueError as e:
+            messages.error(request, str(e))
+        except Exception as e:
+            messages.error(request, f'Lỗi khi thêm sinh viên: {str(e)}')
+    
+    return render(request, 'core/admin/student_create.html', {
+        'classrooms': classrooms
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def student_delete(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    
+    if request.method == 'POST':
+        # Store student info for message
+        student_name = student.name
+        student_id_str = student.student_id
+        
+        # Delete associated user account if exists
+        if student.user:
+            student.user.delete()
+        
+        # Delete student
+        student.delete()
+        
+        messages.success(request, f'Đã xóa sinh viên {student_name} (Mã SV: {student_id_str})')
+        return redirect('student_list')
+    
+    return render(request, 'core/admin/student_confirm_delete.html', {'student': student}) 

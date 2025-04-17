@@ -18,6 +18,13 @@ urlpatterns = [
     path('dashboard/teachers/<int:teacher_id>/reset-password/', views.teacher_reset_password, name='teacher_reset_password'),
     path('dashboard/teachers/<int:teacher_id>/update/', views.teacher_update, name='update_teacher'),
     
+    # Student URLs
+    path('dashboard/students/', views.student_list, name='student_list'),
+    path('dashboard/students/create/', views.student_create, name='student_create'),
+    path('dashboard/students/<int:student_id>/', views.student_detail, name='student_detail'),
+    path('dashboard/students/<int:student_id>/edit/', views.student_edit, name='student_edit'),
+    path('dashboard/students/<int:student_id>/delete/', views.student_delete, name='student_delete'),
+    
     path('dashboard/subjects/', views.subject_list, name='subject_list'),
     path('dashboard/subjects/create/', views.subject_create, name='subject_create'),
     path('subject/<int:pk>/edit/', views.subject_edit, name='subject_edit'),

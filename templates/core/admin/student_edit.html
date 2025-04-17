@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Cập nhật thông tin sinh viên - Hệ thống Quản lý Điểm Sinh viên{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div style="background-color: #1a237e;" class="text-white py-4 mb-4">
+    <div class="container text-center position-relative">
+        <div class="position-absolute" style="left: 1rem; top: 50%; transform: translateY(-50%);">
+            <a href="{% url 'student_detail' student.id %}" class="btn btn-light btn-sm rounded-circle">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+        <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-10 rounded-circle p-3 mb-2">
+            <i class="fas fa-user-graduate text-white fa-2x"></i>
+        </div>
+        <h4 class="text-uppercase mb-1">CẬP NHẬT THÔNG TIN SINH VIÊN</h4>
+        <p class="mb-0 text-white-50">{{ student.name }} - {{ student.student_id }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-id-card text-primary me-2"></i>
+                                    <span>Mã sinh viên</span>
+                                    <span class="text-danger ms-1">*</span>
+                                </label>
+                                <input type="text" class="form-control {% if form_errors.student_id %}is-invalid{% endif %}"
+                                       name="student_id" value="{{ student.student_id }}" required>
+                                {% if form_errors.student_id %}
+                                    <div class="invalid-feedback">{{ form_errors.student_id.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-user text-primary me-2"></i>
+                                    <span>Họ và tên</span>
+                                    <span class="text-danger ms-1">*</span>
+                                </label>
+                                <input type="text" class="form-control {% if form_errors.name %}is-invalid{% endif %}"
+                                       name="name" value="{{ student.name }}" required>
+                                {% if form_errors.name %}
+                                    <div class="invalid-feedback">{{ form_errors.name.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-envelope text-primary me-2"></i>
+                                    <span>Email</span>
+                                </label>
+                                <input type="email" class="form-control {% if form_errors.email %}is-invalid{% endif %}"
+                                       name="email" value="{{ student.email }}">
+                                {% if form_errors.email %}
+                                    <div class="invalid-feedback">{{ form_errors.email.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Nếu cung cấp email, hệ thống sẽ tạo tài khoản đăng nhập cho sinh viên
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-phone text-primary me-2"></i>
+                                    <span>Số điện thoại</span>
+                                </label>
+                                <input type="tel" class="form-control {% if form_errors.phone %}is-invalid{% endif %}"
+                                       name="phone" value="{{ student.phone }}" pattern="[0-9]{10}">
+                                {% if form_errors.phone %}
+                                    <div class="invalid-feedback">{{ form_errors.phone.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Số điện thoại phải có 10 chữ số
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save me-2"></i>Lưu thay đổi
+                            </button>
+                            <button type="button" class="btn btn-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="fas fa-trash me-2"></i>Xóa sinh viên
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle p-3 mb-3">
+                    <i class="fas fa-trash fa-2x text-danger"></i>
+                </div>
+                <h5 class="mb-2">Bạn có chắc chắn muốn xóa sinh viên này?</h5>
+                <p class="text-muted mb-0">{{ student.name }} - {{ student.student_id }}</p>
+                <div class="alert alert-warning mt-3 mb-0 text-start">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Hành động này không thể hoàn tác và sẽ xóa tất cả dữ liệu liên quan!
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Hủy
+                </button>
+                <a href="{% url 'student_delete' student.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash me-2"></i>Xác nhận xóa
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 10) {
+        value = value.slice(0, 10);
+    }
+    e.target.value = value;
+});
+</script>
+{% endblock %} 

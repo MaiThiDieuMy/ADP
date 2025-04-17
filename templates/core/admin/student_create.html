@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+
+{% block title %}Thêm Sinh Viên - Hệ thống Quản lý Điểm Sinh viên{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hide navigation bar */
+    .navbar {
+        display: none !important;
+    }
+
+    /* Adjust main content padding */
+    main {
+        padding-top: 0 !important;
+    }
+
+    :root {
+        --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        --secondary-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+        --accent-gradient: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        --success-gradient: linear-gradient(45deg, #2ecc71, #27ae60);
+        --primary-color: #1e3c72;
+        --text-light: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Sidebar styles */
+    #sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100%;
+        width: 280px;
+        background: var(--primary-gradient);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        overflow-y: auto;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+    }
+
+    #sidebar.active {
+        left: 0;
+    }
+
+    .sidebar-header {
+        padding: 30px 20px;
+        background: rgba(0, 0, 0, 0.1);
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .nav-link {
+        color: var(--text-light);
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s;
+        border-radius: 8px;
+        margin: 4px 12px;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background: rgba(255,255,255,0.1);
+        color: white;
+    }
+
+    .nav-link i {
+        margin-right: 10px;
+        width: 20px;
+        text-align: center;
+    }
+
+    /* Content styles */
+    .hero-section {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 30px rgba(0,0,0,0.15);
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    .hero-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    /* Form styles */
+    .form-section {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: #2d3748;
+    }
+
+    .form-control {
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        padding: 0.75rem 1rem;
+        width: 100%;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #4299e1;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    }
+
+    .password-info {
+        background: #ebf8ff;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-top: 1rem;
+        color: #2b6cb0;
+    }
+
+    .btn-group {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(30,60,114,0.3);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: #4a5568;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+        background: #f7fafc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-icon">
+        <i class="fas fa-user-graduate"></i>
+    </div>
+    <h1 class="hero-title">THÊM MỚI SINH VIÊN</h1>
+    <p class="hero-subtitle">Tạo tài khoản mới cho sinh viên</p>
+</div>
+
+<!-- Form Section -->
+<div class="container">
+    <div class="form-section">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- Username -->
+            <div class="form-group">
+                <label class="form-label" for="student_id">
+                    <i class="fas fa-user me-2"></i>Mã sinh viên <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="student_id" name="student_id" required>
+            </div>
+
+            <!-- Name -->
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label class="form-label" for="first_name">
+                        <i class="fas fa-user me-2"></i>Tên <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label class="form-label" for="last_name">
+                        <i class="fas fa-user me-2"></i>Họ <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label class="form-label" for="email">
+                    <i class="fas fa-envelope me-2"></i>Email
+                </label>
+                <input type="email" class="form-control" id="email" name="email">
+            </div>
+
+            <!-- Phone -->
+            <div class="form-group">
+                <label class="form-label" for="phone">
+                    <i class="fas fa-phone me-2"></i>Số điện thoại
+                </label>
+                <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}">
+            </div>
+
+            <!-- Classroom -->
+            <div class="form-group">
+                <label class="form-label" for="classroom">
+                    <i class="fas fa-chalkboard me-2"></i>Lớp <span class="text-danger">*</span>
+                </label>
+                <select class="form-control" id="classroom" name="classroom" required>
+                    <option value="">Chọn lớp</option>
+                    {% for classroom in classrooms %}
+                    <option value="{{ classroom.id }}">{{ classroom.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Password Info -->
+            <div class="password-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Mật khẩu mặc định sẽ được đặt là "<strong>password123</strong>". Sinh viên có thể thay đổi mật khẩu sau khi đăng nhập.
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-group">
+                <a href="{% url 'student_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Tạo tài khoản
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input[required], select[required]');
+    
+    // Phone number validation
+    const phoneInput = document.getElementById('phone');
+    phoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 10) value = value.slice(0, 10);
+        e.target.value = value;
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                isValid = false;
+                showError(input, 'Trường này là bắt buộc');
+            } else {
+                clearError(input);
+            }
+        });
+
+        // Email validation if provided
+        const email = document.getElementById('email');
+        if (email.value && !isValidEmail(email.value)) {
+            isValid = false;
+            showError(email, 'Email không hợp lệ');
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+
+    function showError(input, message) {
+        clearError(input);
+        input.classList.add('is-invalid');
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback';
+        errorDiv.textContent = message;
+        input.parentNode.appendChild(errorDiv);
+    }
+
+    function clearError(input) {
+        input.classList.remove('is-invalid');
+        const errorDiv = input.parentNode.querySelector('.invalid-feedback');
+        if (errorDiv) errorDiv.remove();
+    }
+
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+});
+</script>
+{% endblock %} 
