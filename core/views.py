@@ -54,7 +54,7 @@ def login_view(request):
                 elif hasattr(user, 'teacher'):
                     return redirect('teacher_dashboard')
                 elif hasattr(user, 'student'):
-                    return redirect('student_profile')
+                    return redirect('dashboard_students')
                 else:
                     messages.error(request, 'Tài khoản không có quyền truy cập')
                     logout(request)
@@ -1621,6 +1621,39 @@ def student_change_password(request):
             messages.success(request, 'Đổi mật khẩu thành công')
             return redirect('login')
             
-    return render(request, 'core/student/change_password.html', {
+    return render(request, 'core/student/change_password_students.html', {
         'student': request.user.student
-    }) 
+    })
+
+@login_required
+def dashboard_students(request):
+    if not hasattr(request.user, 'student'):
+        raise PermissionDenied
+        
+    student = request.user.student
+    
+    # Get all grades for this student
+    grades = Grade.objects.filter(student=student)
+    
+    # Calculate statistics
+    total_subjects = TeacherAssignment.objects.filter(classroom=student.classroom).count()
+    completed_subjects = grades.values('teacher_assignment').distinct().count()
+    ongoing_subjects = total_subjects - completed_subjects
+    
+    # Calculate GPA
+    if grades.exists():
+        total_grade = sum(grade.value for grade in grades if grade.value is not None)
+        total_count = grades.filter(value__isnull=False).count()
+        gpa = round(total_grade / total_count, 2) if total_count > 0 else None
+    else:
+        gpa = None
+    
+    context = {
+        'student': student,
+        'total_subjects': total_subjects,
+        'completed_subjects': completed_subjects,
+        'ongoing_subjects': ongoing_subjects,
+        'gpa': gpa
+    }
+    
+    return render(request, 'core/student/dashboard_students.html', context) 

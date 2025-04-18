@@ -60,6 +60,7 @@ urlpatterns = [
     path('teacher/assignments/<int:assignment_id>/download/', views.download_grades, name='download_grades'),
     
     # Student routes
+    path('student/dashboard_students/', views.dashboard_students, name='dashboard_students'),
     path('student/profile/', views.student_profile, name='student_profile'),
     path('student/grades/', views.student_grades, name='student_grades'),
     path('student/change-password/', views.student_change_password, name='student_change_password'),
