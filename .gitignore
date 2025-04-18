@@ -1,0 +1,11 @@
+# Bỏ qua file cơ sở dữ liệu
+db.sqlite3
+# Bỏ qua thư mục môi trường ảo
+env/
+venv/
+
+# Bỏ qua các file cache của Python
+__pycache__/
+*.pyc
+# Bỏ qua các file hệ thống của VS Code
+.vscode/
