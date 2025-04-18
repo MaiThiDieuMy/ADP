@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core",
-    
     "django_recaptcha",
 ]
 
@@ -134,6 +133,9 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
-# django recaptcha
-RECAPTCHA_PUBLIC_KEY = '6LfZvRwrAAAAANhky5GQ3MYJ6QJVHeGkrw-Vb4og'
-RECAPTCHA_PRIVATE_KEY = '6LfZvRwrAAAAAH6tqy-3XxP8K2klneh7xCJapryq'
+# django-recaptcha 
+RECAPTCHA_PUBLIC_KEY = '6LegEx0rAAAAAH7bdBmGvX7fyxg4VXHN-Lm_KYJS'
+RECAPTCHA_PRIVATE_KEY = '6LegEx0rAAAAAFXO5xql7oLVTF4VQPw35t6qSN3I'
+
+
+
