@@ -8,15 +8,6 @@ class CustomAuthenticationForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tên đăng nhập'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Mật khẩu'}))
     captcha = ReCaptchaField()
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        captcha_response = cleaned_data.get('captcha')
-
-        if not captcha_response:
-            raise forms.ValidationError("Vui lòng xác nhận rằng bạn không phải là robot.")
-
-        return cleaned_data
 
 class UserForm(forms.ModelForm):
     class Meta:

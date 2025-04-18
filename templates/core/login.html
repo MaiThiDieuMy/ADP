@@ -391,6 +391,13 @@
                                 </button>
                             </div>
                         </div>
+                        <!-- Thêm phần reCAPTCHA -->
+                        <div class="mb-4">
+                            {{ form.captcha }}
+                            {% if form.captcha.errors %}
+                                <div class="text-danger">{{ form.captcha.errors }}</div>
+                            {% endif %}
+                        </div>
                         
                         <button type="submit" class="btn btn-login">
                             <i class="fas fa-sign-in-alt"></i>Đăng nhập
@@ -418,4 +425,5 @@ function togglePassword() {
     }
 }
 </script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 {% endblock %} 
