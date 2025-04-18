@@ -575,6 +575,12 @@
             </a>
         </li>
         <li class="nav-item">
+            <a href="{% url 'student_list' %}" class="nav-link">
+                <i class="fas fa-user-graduate"></i>
+                Sinh viên
+            </a>
+        </li>
+        <li class="nav-item">
             <a href="{% url 'subject_list' %}" class="nav-link">
                 <i class="fas fa-book"></i>
                 Môn học
@@ -690,17 +696,6 @@
                                     <div class="col-md-6">
                                         <div class="detail-box">
                                             <div class="detail-icon">
-                                                <i class="fas fa-id-card"></i>
-                                            </div>
-                                            <div class="detail-content">
-                                                <label>ID</label>
-                                                <p>{{ teacher.id }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="detail-box">
-                                            <div class="detail-icon">
                                                 <i class="fas fa-user"></i>
                                             </div>
                                             <div class="detail-content">
@@ -774,7 +769,6 @@
                     <table class="table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Môn học</th>
                             <th>Lớp</th>
                             <th>Học kỳ</th>
@@ -784,7 +778,6 @@
                     <tbody>
                         {% for assignment in teacher_assignments %}
                         <tr>
-                            <td>{{ assignment.id }}</td>
                             <td>{{ assignment.subject.name }}</td>
                             <td>{{ assignment.classroom.name }}</td>
                             <td>{{ assignment.semester.name }}</td>

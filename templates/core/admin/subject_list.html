@@ -439,6 +439,12 @@
             </a>
         </li>
         <li class="nav-item">
+            <a href="{% url 'student_list' %}" class="nav-link">
+                <i class="fas fa-user-graduate"></i>
+                Sinh viên
+            </a>
+        </li>
+        <li class="nav-item">
             <a href="{% url 'subject_list' %}" class="nav-link active">
                 <i class="fas fa-book"></i>
                 Môn học
@@ -510,7 +516,6 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Tên môn học</th>
                                 <th>Ngày tạo</th>
                                 <th>Hành động</th>
@@ -519,7 +524,6 @@
                         <tbody>
                             {% for subject in subjects %}
                             <tr>
-                                <td>{{ subject.id }}</td>
                                 <td>{{ subject.name }}</td>
                                 <td>{{ subject.created_at|date:"d/m/Y" }}</td>
                                 <td>

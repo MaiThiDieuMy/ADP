@@ -494,6 +494,12 @@
             </a>
         </li>
         <li class="nav-item">
+            <a href="{% url 'student_list' %}" class="nav-link">
+                <i class="fas fa-user-graduate"></i>
+                Sinh viên
+            </a>
+        </li>
+        <li class="nav-item">
             <a href="{% url 'subject_list' %}" class="nav-link">
                 <i class="fas fa-book"></i>
                 Môn học
@@ -574,7 +580,6 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Tên học kỳ</th>
                                 <th>Ngày bắt đầu</th>
                                 <th>Ngày kết thúc</th>
@@ -585,7 +590,6 @@
                         <tbody>
                             {% for semester in semesters %}
                                 <tr>
-                                    <td>{{ semester.id }}</td>
                                     <td>{{ semester.name }}</td>
                                     <td>{{ semester.start_date|date:"d/m/Y" }}</td>
                                     <td>{{ semester.end_date|date:"d/m/Y" }}</td>

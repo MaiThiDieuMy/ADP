@@ -421,6 +421,12 @@
             </a>
         </li>
         <li class="nav-item">
+            <a href="{% url 'student_list' %}" class="nav-link">
+                <i class="fas fa-user-graduate"></i>
+                Sinh viên
+            </a>
+        </li>
+        <li class="nav-item">
             <a href="{% url 'subject_list' %}" class="nav-link">
                 <i class="fas fa-book"></i>
                 Môn học
@@ -492,7 +498,6 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Tên đăng nhập</th>
                                 <th>Họ và tên</th>
                                 <th>Email</th>
@@ -504,7 +509,6 @@
                         <tbody>
                             {% for teacher in teachers %}
                             <tr>
-                                <td>{{ teacher.id }}</td>
                                 <td>{{ teacher.user.username }}</td>
                                 <td>{{ teacher.user.get_full_name }}</td>
                                 <td>{{ teacher.user.email }}</td>
