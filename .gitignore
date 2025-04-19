@@ -1,5 +1,3 @@
-# Bỏ qua file cơ sở dữ liệu
-db.sqlite3
 # Bỏ qua thư mục môi trường ảo
 env/
 venv/
