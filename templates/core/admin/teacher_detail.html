@@ -772,7 +772,6 @@
                             <th>Môn học</th>
                             <th>Lớp</th>
                             <th>Học kỳ</th>
-                            <th>Ngày phân công</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -781,7 +780,6 @@
                             <td>{{ assignment.subject.name }}</td>
                             <td>{{ assignment.classroom.name }}</td>
                             <td>{{ assignment.semester.name }}</td>
-                            <td>{{ assignment.created_at|date:"d/m/Y" }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

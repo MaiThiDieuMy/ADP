@@ -306,6 +306,8 @@
         justify-content: space-between;
     }
 
+    .stat-card.orange { border-left: 4px solid #ffa07a; }
+    
     .stat-link:hover {
         color: #1e3c72;
     }
@@ -478,6 +480,15 @@
                     <h3 class="stat-title">Phân công</h3>
                     <div class="stat-number">{{ assignments.count|default_if_none:"0" }}</div>
                     <a href="{% url 'teacher_assignment_list' %}" class="stat-link">
+                        Xem chi tiết
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="stat-card orange">
+                    <h3 class="stat-title">Học kỳ</h3>
+                    <div class="stat-number">{{ semesters.count|default_if_none:"0" }}</div>
+                    <a href="{% url 'semester_list' %}" class="stat-link">
                         Xem chi tiết
                         <i class="fas fa-arrow-right"></i>
                     </a>
