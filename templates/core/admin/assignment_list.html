@@ -592,7 +592,6 @@
                                 <th>Môn học</th>
                                 <th>Lớp</th>
                                 <th>Học kỳ</th>
-                                <th>Ngày tạo</th>
                                 <th>Hành động</th>
                             </tr>
                         </thead>
@@ -607,7 +606,6 @@
                                 <td>{{ assignment.subject.name }}</td>
                                 <td>{{ assignment.classroom.name }}</td>
                                 <td>{{ assignment.semester.name }}</td>
-                                <td>{{ assignment.created_at|date:"d/m/Y" }}</td>
                                 <td>
                                     <div class="btn-group">
                                         <button class="btn btn-danger" onclick="deleteAssignment({{ assignment.id }})" title="Xóa phân công">
