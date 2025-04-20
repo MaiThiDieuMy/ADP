@@ -632,7 +632,11 @@
                         <i class="fas fa-plus"></i>
                         Thêm sinh viên
                     </a>
-                    <form method="get" class="d-flex gap-3">
+                    <form method="get" class="d-flex gap-3 align-items-center">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sinh viên..." value="{{ search_query }}">
+                        </div>
                         <div class="filter-box">
                             <select name="sort_by" class="form-select" onchange="updateSort(this)">
                                 <option value="">Sắp xếp theo</option>
@@ -645,10 +649,6 @@
                                 <option value="asc" {% if sort_direction == 'asc' %}selected{% endif %}>Tăng dần</option>
                                 <option value="desc" {% if sort_direction == 'desc' %}selected{% endif %}>Giảm dần</option>
                             </select>
-                        </div>
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sinh viên..." value="{{ search_query }}">
                         </div>
                     </form>
                 </div>
