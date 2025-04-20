@@ -310,22 +310,91 @@
         margin-right: 0.5rem;
     }
 
+    .btn-back {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 2rem;
+        padding: 0.5rem 1.2rem;
+        font-weight: 600;
+        transition: all 0.4s ease;
+        backdrop-filter: blur(5px);
+        font-size: 0.9rem;
+        margin-right: 1rem;
+    }
+
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .btn-back i {
+        margin-right: 0.5rem;
+    }
+
     .table {
         margin: 0;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
     }
 
     .table th {
         border-top: none;
         color: #1e3c72;
         font-weight: 600;
-        padding: 1rem 1.5rem;
+        padding: 1rem 0.5rem;
         background: rgba(33, 147, 176, 0.05);
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
     }
 
     .table td {
-        padding: 1rem 1.5rem;
+        padding: 1rem 0.5rem;
         vertical-align: middle;
         border-color: rgba(0,0,0,0.05);
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .table td, .table th {
+        display: table-cell;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .table td > div,
+    .table th > div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    .table-responsive {
+        width: 100%;
+        margin: 0 auto;
+        max-width: 1200px;
+    }
+
+    .table-container {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .btn-group {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .table td:first-child,
+    .table th:first-child {
+        padding-left: 1rem;
     }
 
     .btn-group .btn {
@@ -499,14 +568,20 @@
 
         <div class="subject-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">
-                    <i class="fas fa-book"></i>
-                    Danh sách môn học
-                </h4>
+                <div class="d-flex align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-book"></i>
+                        Danh sách môn học
+                    </h4>
+                </div>
                 <div>
                     <a href="{% url 'subject_create' %}" class="btn btn-add">
                         <i class="fas fa-plus"></i>
                         Thêm môn học
+                    </a>
+                    <a href="{% url 'admin_dashboard' %}" class="btn btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay lại
                     </a>
                 </div>
             </div>
@@ -516,16 +591,16 @@
                     <table class="table">
                         <thead>
                             <tr>
+                                <th>STT</th>
                                 <th>Tên môn học</th>
-                                <th>Ngày tạo</th>
                                 <th>Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for subject in subjects %}
                             <tr>
+                                <td>{{ forloop.counter }}</td>
                                 <td>{{ subject.name }}</td>
-                                <td>{{ subject.created_at|date:"d/m/Y" }}</td>
                                 <td>
                                     <div class="btn-group">
                                         <a href="{% url 'subject_edit' subject.id %}" class="btn btn-info btn-sm">
