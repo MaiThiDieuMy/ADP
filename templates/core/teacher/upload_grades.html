@@ -1145,6 +1145,10 @@
 {% endblock %}
 
 {% block content %}
+<!-- Debug assignment -->
+<!-- Assignment ID: {{ assignment.id }} -->
+<!-- Assignment: {{ assignment }} -->
+
 <!-- Navbar duy nhất -->
 <!-- Sidebar Toggle Button -->
 <button id="sidebarCollapse">
@@ -1209,12 +1213,6 @@
                         </div>
                         <h1 class="hero-title">TẢI LÊN ĐIỂM TỪ EXCEL</h1>
                         <p class="hero-subtitle">{{ assignment.subject.name }} - {{ assignment.classroom.name }}</p>
-                        <div class="mt-4">
-                            <a href="{% url 'class_grades' assignment.id %}" class="btn-back">
-                                <i class="fas fa-arrow-left me-2"></i>
-                                Quay lại trang điểm
-                            </a>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1270,11 +1268,17 @@
             <!-- Instructions Card -->
             <div class="col-lg-6">
                 <div class="content-card instruction-card">
-                    <div class="card-header">
-                        <div class="header-icon">
-                            <i class="fas fa-info-circle"></i>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <h5 class="mb-0">Hướng dẫn</h5>
                         </div>
-                        <h5 class="mb-0">Hướng dẫn</h5>
+                        <a href="{% url 'class_grades' assignment.id %}" class="btn btn-light">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Quay lại trang điểm
+                        </a>
                     </div>
                     <div class="card-body">
                         <div class="instruction-steps">
