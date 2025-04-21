@@ -305,7 +305,7 @@ def classroom_import_students(request, classroom_id):
                         headers.append(cell_value.lower().strip())  # Normalize headers
                 
                 # Validate required columns
-                required_columns = ['student_id']
+                required_columns = ['student_id', 'name']
                 missing_columns = [col for col in required_columns if col not in headers]
                 
                 if missing_columns:
@@ -314,51 +314,76 @@ def classroom_import_students(request, classroom_id):
                     return redirect('classroom_detail', classroom_id=classroom.id)
                 
                 # Process data rows
+                students_created = 0
+                students_updated = 0
                 accounts_created = 0
                 skipped_count = 0
-                not_found_count = 0
                 
                 # Start from the second row (after headers)
                 for row in range(2, sheet.max_row + 1):
                     try:
                         student_id = str(sheet.cell(row=row, column=headers.index('student_id') + 1).value).strip()
+                        name = str(sheet.cell(row=row, column=headers.index('name') + 1).value).strip()
+                        
+                        # Get optional fields if they exist in headers
+                        email = None
+                        phone = None
+                        
+                        if 'email' in headers:
+                            email = str(sheet.cell(row=row, column=headers.index('email') + 1).value or '').strip()
+                        if 'phone' in headers:
+                            phone = str(sheet.cell(row=row, column=headers.index('phone') + 1).value or '').strip()
                         
                         # Skip empty rows
-                        if not student_id:
+                        if not student_id or not name:
                             skipped_count += 1
                             continue
                             
-                        # Check if student exists in the system
-                        try:
-                            student = Student.objects.get(student_id=student_id)
-                            
-                            # Create user account if not exists
-                            if not student.user:
-                                user = User.objects.create_user(
-                                    username=student_id,
-                                    email=f"{student_id}@example.com",
-                                    password='password123'
-                                )
-                                student.user = user
-                                student.save()
-                                accounts_created += 1
-                            
-                        except Student.DoesNotExist:
-                            not_found_count += 1
-                            continue
+                        # Try to get existing student or create new one
+                        student, created = Student.objects.get_or_create(
+                            student_id=student_id,
+                            defaults={
+                                'name': name,
+                                'phone': phone,
+                                'classroom': classroom
+                            }
+                        )
+                        
+                        if created:
+                            students_created += 1
+                        else:
+                            # Update existing student
+                            student.name = name
+                            student.phone = phone
+                            student.classroom = classroom
+                            student.save()
+                            students_updated += 1
+                        
+                        # Create user account if not exists
+                        if not student.user:
+                            user = User.objects.create_user(
+                                username=student_id,
+                                email=email if email else f"{student_id}@example.com",
+                                password='password123'
+                            )
+                            student.user = user
+                            student.save()
+                            accounts_created += 1
                             
                     except Exception as e:
-                        print(f"Error processing row: {e}")
+                        print(f"Error processing row {row}: {e}")
                         continue
                 
                 # Prepare message
                 message_parts = []
+                if students_created > 0:
+                    message_parts.append(f"Đã thêm {students_created} sinh viên mới")
+                if students_updated > 0:
+                    message_parts.append(f"Đã cập nhật {students_updated} sinh viên")
                 if accounts_created > 0:
                     message_parts.append(f"Đã tạo {accounts_created} tài khoản mới")
-                if not_found_count > 0:
-                    message_parts.append(f"{not_found_count} sinh viên không tồn tại trong hệ thống")
                 if skipped_count > 0:
-                    message_parts.append(f"{skipped_count} dòng bị bỏ qua (trống)")
+                    message_parts.append(f"{skipped_count} dòng bị bỏ qua (thiếu thông tin)")
                 
                 if message_parts:
                     messages.success(request, ". ".join(message_parts) + ".")
