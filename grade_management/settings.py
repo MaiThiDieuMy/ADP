@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core",
-    "django_recaptcha",
 ]
 
 MIDDLEWARE = [
@@ -132,10 +131,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
-
-# django-recaptcha 
-RECAPTCHA_PUBLIC_KEY = '6LegEx0rAAAAAH7bdBmGvX7fyxg4VXHN-Lm_KYJS'
-RECAPTCHA_PRIVATE_KEY = '6LegEx0rAAAAAFXO5xql7oLVTF4VQPw35t6qSN3I'
 
 
 

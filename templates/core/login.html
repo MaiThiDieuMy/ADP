@@ -348,6 +348,98 @@
             font-size: 0.9rem;
         }
     }
+
+    .recaptcha-container {
+        margin: 1.5rem 0;
+        display: flex;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 1rem;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .recaptcha-container .g-recaptcha {
+        transform: scale(0.9);
+        transform-origin: center;
+    }
+
+    .recaptcha-container:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .recaptcha-info {
+        text-align: center;
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        font-style: italic;
+    }
+
+    .captcha-container {
+        margin: 1.5rem 0;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .captcha-container label {
+        color: #1e3c72;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .captcha-container img {
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        display: block;
+    }
+
+    .captcha-container input {
+        border-radius: 1rem;
+        padding: 0.8rem 1.2rem;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        background: #ffffff;
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .captcha-container input:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+        outline: none;
+    }
+
+    .captcha-refresh {
+        color: #1e3c72;
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        margin-top: 0.5rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(30, 60, 114, 0.1);
+    }
+
+    .captcha-refresh i {
+        margin-right: 0.5rem;
+    }
+
+    .captcha-refresh:hover {
+        color: var(--accent-color);
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
 </style>
 {% endblock %}
 
@@ -401,13 +493,7 @@
                                 </button>
                             </div>
                         </div>
-                    <!-- Thêm phần reCAPTCHA -->
-                        <div class="mb-4">
-                            {{ form.captcha }}
-                            {% if form.captcha.errors %}
-                                <div class="text-danger">{{ form.captcha.errors }}</div>
-                            {% endif %}
-                        </div>
+
                         <button type="submit" class="btn btn-login">
                             <i class="fas fa-sign-in-alt"></i>Đăng nhập
                         </button>
