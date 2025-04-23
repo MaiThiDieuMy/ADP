@@ -1516,7 +1516,9 @@ def student_profile(request):
             form_errors['phone'] = ['Số điện thoại phải có 10 chữ số']
             
         if not form_errors:
-            student.email = email
+            # Đồng bộ email với user.email
+            student.user.email = email
+            student.user.save()
             student.phone = phone
             student.save()
             messages.success(request, 'Cập nhật thông tin thành công')

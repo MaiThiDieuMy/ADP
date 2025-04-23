@@ -491,7 +491,7 @@
                                                 <i class="fas fa-envelope"></i>
                                             </span>
                                             <input type="email" class="form-control {% if form_errors.email %}is-invalid{% endif %}"
-                                                   name="email" value="{{ student.email }}" required>
+                                                   name="email" value="{{ student.user.email }}" required>
                                             {% if form_errors.email %}
                                                 <div class="invalid-feedback">{{ form_errors.email.0 }}</div>
                                             {% endif %}
