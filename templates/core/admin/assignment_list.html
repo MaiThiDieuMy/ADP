@@ -610,6 +610,13 @@
                     {% endfor %}
                 {% endif %}
                 
+                <!-- Hidden form for deletion -->
+                <form id="deleteForm" method="post" style="display: none;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="assignment_id" id="assignmentId">
+                </form>
+                
                 {% if assignments %}
                 <div class="table-responsive">
                     <table class="table">
@@ -676,8 +683,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function deleteAssignment(id) {
     if (confirm('Bạn có chắc chắn muốn xóa phân công giảng dạy này không?')) {
-        // Implement deletion (can be done with AJAX or direct form submit)
-        alert('Chức năng xóa phân công đang được phát triển');
+        const form = document.getElementById('deleteForm');
+        const assignmentIdInput = document.getElementById('assignmentId');
+        
+        // Set the assignment ID
+        assignmentIdInput.value = id;
+        
+        // Submit the form
+        form.submit();
     }
 }
 </script>
