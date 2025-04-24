@@ -492,6 +492,65 @@
             opacity: 0;
         }
     }
+
+    /* Modal styles */
+    .modal-content {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .modal-header {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 1rem 1rem 0 0;
+        padding: 1.5rem;
+    }
+
+    .modal-header .btn-close {
+        color: white;
+        opacity: 1;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(0,0,0,0.05);
+        padding: 1.5rem;
+    }
+
+    .btn-delete {
+        background: var(--accent-gradient);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255,107,107,0.3);
+    }
+
+    .btn-cancel {
+        background: #e9ecef;
+        border: none;
+        color: #495057;
+        padding: 0.5rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background: #dee2e6;
+        transform: translateY(-2px);
+    }
 </style>
 {% endblock %}
 
@@ -638,6 +697,9 @@
                                         <a href="{% url 'classroom_import_students' classroom.id %}" class="btn btn-success btn-sm" title="Import sinh viên">
                                             <i class="fas fa-file-import"></i> Import SV
                                         </a>
+                                        <button class="btn btn-danger btn-sm" onclick="confirmDelete({{ classroom.id }}, '{{ classroom.name }}')" title="Xóa lớp">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -655,6 +717,37 @@
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa lớp <strong id="classroomName"></strong>?</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Lưu ý: Hành động này không thể hoàn tác và sẽ xóa tất cả dữ liệu liên quan đến lớp học này!
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-delete">
+                        <i class="fas fa-trash me-2"></i>Xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
@@ -666,23 +759,35 @@ document.addEventListener('DOMContentLoaded', function() {
     function toggleSidebar() {
         sidebar.classList.toggle('active');
         content.classList.toggle('active');
-        if (overlay) overlay.classList.toggle('active');
+        overlay.classList.toggle('active');
     }
 
-    if (sidebarCollapse) sidebarCollapse.addEventListener('click', toggleSidebar);
-    if (sidebarClose) sidebarClose.addEventListener('click', toggleSidebar);
-    if (overlay) overlay.addEventListener('click', toggleSidebar);
+    sidebarCollapse.addEventListener('click', toggleSidebar);
+    sidebarClose.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', toggleSidebar);
 
-    // Tự động ẩn thông báo sau 3 giây
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.classList.add('hiding');
-            setTimeout(() => {
-                alert.remove();
-            }, 300); // Xóa sau khi animation hoàn thành
-        }, 3000);
+    // Close sidebar on mobile when clicking a nav link
+    const navLinks = document.querySelectorAll('#sidebar .nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
+    });
+
+    // Close sidebar when window is resized
+    window.addEventListener('resize', function() {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
     });
 });
+
+function confirmDelete(classroomId, classroomName) {
+    document.getElementById('classroomName').textContent = classroomName;
+    document.getElementById('deleteForm').action = `/classroom/delete/${classroomId}/`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
 </script>
 {% endblock %} 

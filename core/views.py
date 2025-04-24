@@ -265,7 +265,7 @@ def classroom_create(request):
         form = ClassroomForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Class created successfully.")
+            messages.success(request, "Thêm lớp thành công")
             return redirect('classroom_list')
     else:
         form = ClassroomForm()
@@ -1516,7 +1516,9 @@ def student_profile(request):
             form_errors['phone'] = ['Số điện thoại phải có 10 chữ số']
             
         if not form_errors:
-            student.email = email
+            # Đồng bộ email với user.email
+            student.user.email = email
+            student.user.save()
             student.phone = phone
             student.save()
             messages.success(request, 'Cập nhật thông tin thành công')
@@ -1681,4 +1683,29 @@ def dashboard_students(request):
         'gpa': gpa
     }
     
-    return render(request, 'core/student/dashboard_students.html', context) 
+    return render(request, 'core/student/dashboard_students.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def classroom_delete(request, classroom_id):
+    classroom = get_object_or_404(ClassRoom, id=classroom_id)
+    
+    if request.method == 'POST':
+        # Check if there are any teacher assignments
+        if TeacherAssignment.objects.filter(classroom=classroom).exists():
+            messages.error(request, f'Không thể xóa lớp "{classroom.name}" vì đã có phân công giảng dạy.')
+            return redirect('classroom_list')
+        
+        # Delete all students in the class
+        students = classroom.student_set.all()
+        for student in students:
+            if student.user:
+                student.user.delete()  # Delete associated user account
+            student.delete()
+        
+        # Delete the classroom
+        classroom.delete()
+        messages.success(request, f'Lớp "{classroom.name}" đã được xóa thành công.')
+        return redirect('classroom_list')
+    
+    return redirect('classroom_list') 

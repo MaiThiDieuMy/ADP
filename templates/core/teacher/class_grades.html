@@ -1349,6 +1349,116 @@ document.addEventListener('DOMContentLoaded', function() {
         formulaBtn.classList.toggle('d-none', active);
         formulaBtn.querySelector('.formula-active-indicator').classList.toggle('d-none', active);
     }
+
+    // Add event listener for save button
+    $('.btn-save-row').on('click', function() {
+        const row = $(this).closest('tr');
+        const studentId = row.data('student-id');
+        const inputs = row.find('.grade-input');
+        const promises = [];
+
+        inputs.each(function() {
+            const input = $(this);
+            const gradeTypeId = input.data('grade-type-id');
+            const gradeId = input.data('grade-id');
+            const value = input.val();
+            const version = input.data('version');
+
+            if (value !== input.data('original-value')) {
+                const promise = $.ajax({
+                    url: '{% url "update_grade" %}',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        student_id: studentId,
+                        grade_type_id: gradeTypeId,
+                        grade_id: gradeId,
+                        value: value,
+                        version: version
+                    })
+                });
+
+                promises.push(promise);
+            }
+        });
+
+        if (promises.length > 0) {
+            Promise.all(promises)
+                .then(responses => {
+                    // Update data attributes with new values
+                    responses.forEach(response => {
+                        if (response.success) {
+                            const input = row.find(`input[data-grade-type-id="${response.grade_type_id}"]`);
+                            input.data('grade-id', response.grade_id);
+                            input.data('original-value', input.val());
+                            input.data('version', response.version);
+                        }
+                    });
+                    showAlert('Điểm đã được lưu thành công!');
+                })
+                .catch(error => {
+                    console.error('Error saving grades:', error);
+                    showAlert('Có lỗi xảy ra khi lưu điểm. Vui lòng thử lại.', 'danger');
+                });
+        }
+    });
+
+    // Add event listener for save all button
+    $('#saveAllBtn').on('click', function() {
+        $('.btn-save-row').click();
+    });
+
+    // Add event listener for view history button
+    $('.view-history').on('click', function() {
+        const studentId = $(this).data('student-id');
+        const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+        const historyContent = document.getElementById('history-content');
+        
+        // Show loading spinner
+        historyContent.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+            </div>
+        `;
+        
+        // Show modal
+        historyModal.show();
+        
+        // Fetch grade history
+        $.ajax({
+            url: '{% url "grade_history" %}',
+            method: 'GET',
+            data: {
+                student_id: studentId,
+                assignment_id: {{ assignment.id }}
+            }
+        })
+        .then(response => {
+            if (response.success) {
+                // Server returns HTML directly
+                historyContent.innerHTML = response.html;
+            } else {
+                historyContent.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>${response.error || 'Có lỗi xảy ra khi tải lịch sử điểm.'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching grade history:', error);
+            historyContent.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>Có lỗi xảy ra khi tải lịch sử điểm.
+                </div>
+            `;
+        });
+    });
 });
 </script>
 {% endblock %} 
