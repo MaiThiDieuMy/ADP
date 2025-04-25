@@ -1,0 +1,47 @@
+name: Django CI
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.8]  # Có thể thêm các phiên bản Python khác nếu cần
+
+    steps:
+    # 1. Check out mã nguồn
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Cài đặt Python
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    # 3. Cài đặt các dependencies hệ thống (ví dụ: libpq-dev cho PostgreSQL)
+    - name: Install system dependencies
+      run: sudo apt-get update && sudo apt-get install -y libpq-dev
+
+    # 4. Cài đặt dependencies của Python từ requirements.txt
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # 5. Kiểm tra phiên bản Python (để chắc chắn môi trường được thiết lập đúng)
+    - name: Check Python version
+      run: python --version
+
+    # 6. Chạy các test Django
+    - name: Run Tests
+      run: |
+        python manage.py test --verbosity=2
