@@ -657,6 +657,14 @@
             </div>
         </div>
 
+        <!-- Back Button -->
+        <div class="d-flex justify-content-end mb-4">
+            <a href="{% url 'classroom_detail' classroom.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Quay lại
+            </a>
+        </div>
+
         <!-- Guide Section -->
         <div class="guide-section">
             <h5><i class="fas fa-info-circle me-2"></i>Hướng dẫn:</h5>
@@ -733,15 +741,11 @@
 
         <!-- Manual Entry Form -->
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <h5 class="mb-0">
                     <i class="fas fa-keyboard me-2"></i>
                     Thêm sinh viên thủ công
                 </h5>
-                <a href="{% url 'classroom_detail' classroom.id %}" class="btn btn-light btn-sm">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Quay lại
-                </a>
             </div>
             <div class="card-body">
                 <form method="post" action="{% url 'classroom_add_student' classroom.id %}" class="row g-3">
