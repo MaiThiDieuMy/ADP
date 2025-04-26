@@ -354,25 +354,19 @@
     /* Add column width styles */
     .table th:nth-child(1), /* Student ID column */
     .table td:nth-child(1) {
-        width: 15%;
+        width: 20%;
         min-width: 120px;
     }
 
     .table th:nth-child(2), /* Name column */
     .table td:nth-child(2) {
-        width: 40%;
+        width: 55%;
         min-width: 200px;
     }
 
-    .table th:nth-child(3), /* Class column */
+    .table th:nth-child(3), /* Actions column */
     .table td:nth-child(3) {
         width: 25%;
-        min-width: 150px;
-    }
-
-    .table th:nth-child(4), /* Actions column */
-    .table td:nth-child(4) {
-        width: 20%;
         min-width: 120px;
     }
 
@@ -689,7 +683,6 @@
                                 <tr>
                                     <th>Mã sinh viên</th>
                                     <th>Họ và tên</th>
-                                    <th>Lớp</th>
                                     <th>Hành động</th>
                                 </tr>
                             </thead>
@@ -698,7 +691,6 @@
                                 <tr>
                                     <td>{{ student.student_id }}</td>
                                     <td>{{ student.name }}</td>
-                                    <td>{{ student.classroom.name|default:"-" }}</td>
                                     <td>
                                         <div class="btn-group">
                                             <a href="{% url 'student_detail' student.id %}" class="btn btn-info btn-sm" title="Xem chi tiết">
