@@ -1708,4 +1708,48 @@ def classroom_delete(request, classroom_id):
         messages.success(request, f'Lớp "{classroom.name}" đã được xóa thành công.')
         return redirect('classroom_list')
     
-    return redirect('classroom_list') 
+    return redirect('classroom_list')
+
+@login_required
+@user_passes_test(is_admin)
+def classroom_add_student(request, classroom_id):
+    classroom = get_object_or_404(ClassRoom, id=classroom_id)
+    
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        name = request.POST.get('name')
+        
+        if student_id and name:
+            try:
+                # Try to get existing student or create new one
+                student, created = Student.objects.get_or_create(
+                    student_id=student_id,
+                    defaults={
+                        'name': name,
+                        'classroom': classroom
+                    }
+                )
+                
+                if created:
+                    # Create user account for new student
+                    user = User.objects.create_user(
+                        username=student_id,
+                        email=f"{student_id}@example.com",
+                        password='password123'  # Default password
+                    )
+                    student.user = user
+                    student.save()
+                    messages.success(request, f'Đã thêm sinh viên {name} vào lớp {classroom.name}.')
+                else:
+                    # Update existing student
+                    student.name = name
+                    student.classroom = classroom
+                    student.save()
+                    messages.success(request, f'Đã cập nhật thông tin sinh viên {name}.')
+                    
+            except Exception as e:
+                messages.error(request, f'Lỗi khi thêm sinh viên: {str(e)}')
+        else:
+            messages.error(request, 'Vui lòng điền đầy đủ thông tin sinh viên.')
+            
+    return redirect('classroom_import_students', classroom_id=classroom.id) 
