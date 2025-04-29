@@ -21,7 +21,7 @@ class Subject(models.Model):
 class ClassRoom(models.Model):
     class_code = models.CharField(max_length=10)
     name = models.CharField(max_length=100)
-    
+    students = models.ManyToManyField('Student', related_name='classrooms')
     def __str__(self):
         return self.name
 
@@ -49,7 +49,6 @@ class TeacherAssignment(models.Model):
 class Student(models.Model):
     student_id = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=100)
-    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, null=True, blank=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True)
     

@@ -34,9 +34,13 @@ class TeacherAssignmentAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('student_id', 'name', 'classroom')
-    list_filter = ('classroom',)
+    list_display = ('student_id', 'name', 'get_classrooms')
+    list_filter = ('classrooms',)
     search_fields = ('student_id', 'name')
+
+    def get_classrooms(self, obj):
+            return ", ".join([classroom.name for classroom in obj.classrooms.all()])
+    get_classrooms.short_description = 'Lớp học'
 
 @admin.register(GradeType)
 class GradeTypeAdmin(admin.ModelAdmin):

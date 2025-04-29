@@ -505,7 +505,7 @@
                             </tr>
                             <tr>
                                 <th>Số lượng sinh viên:</th>
-                                <td>{{ students.count }}</td>
+                                <td>{{ students|length }}</td>
                             </tr>
                         </table>
                     </div>
@@ -536,7 +536,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for student in students %}
+                            {% for student in classroom.students.all %}
                             <tr>
                                 <td>{{ forloop.counter }}</td>
                                 <td>{{ student.student_id }}</td>

@@ -640,7 +640,7 @@
                             </h4>
                         </div>
                         <div class="info-card-body">
-                            {% if student.enrollments.all %}
+                            {% if student.classrooms.all %}
                             <div class="table-responsive">
                                 <table class="table">
                                     <thead>
@@ -652,22 +652,10 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for enrollment in student.enrollments.all %}
+                                        {% for classroom in student.classrooms.all %}
                                         <tr>
-                                            <td>{{ enrollment.classroom.class_code }}</td>
-                                            <td>{{ enrollment.classroom.name }}</td>
-                                            <td>{{ enrollment.classroom.semester.name }}</td>
-                                            <td>
-                                                <span class="badge badge-primary">
-                                                    {% if enrollment.is_active %}
-                                                    <i class="fas fa-check-circle"></i>
-                                                    Đang học
-                                                    {% else %}
-                                                    <i class="fas fa-times-circle"></i>
-                                                    Đã kết thúc
-                                                    {% endif %}
-                                                </span>
-                                            </td>
+                                            <td>{{ classroom.class_code }}</td>
+                                            <td>{{ classroom.name }}</td>   
                                         </tr>
                                         {% endfor %}
                                     </tbody>

@@ -8,6 +8,7 @@ from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.utils import timezone
 import openpyxl
 import json
+from django.db import IntegrityError
 from urllib.parse import quote
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
@@ -276,129 +277,99 @@ def classroom_create(request):
 @user_passes_test(is_admin)
 def classroom_detail(request, classroom_id):
     classroom = get_object_or_404(ClassRoom, id=classroom_id)
-    students = classroom.student_set.all()
-    return render(request, 'core/admin/classroom_detail.html', {
+    students = classroom.students.all()
+    context = {
         'classroom': classroom,
-        'students': students
-    })
+        'students': students,
+    }
+    return render(request, 'core/admin/classroom_detail.html', context)
 
 @login_required
 @user_passes_test(is_admin)
 def classroom_import_students(request, classroom_id):
     classroom = get_object_or_404(ClassRoom, id=classroom_id)
-    
+
     if request.method == 'POST':
         form = StudentImportForm(request.POST, request.FILES)
         if form.is_valid():
             excel_file = request.FILES['excel_file']
-            
+
             try:
-                # Load the workbook and select the first worksheet
                 wb = openpyxl.load_workbook(excel_file)
                 sheet = wb.active
-                
-                # Get headers (first row)
-                headers = []
-                for col in range(1, sheet.max_column + 1):
-                    cell_value = sheet.cell(row=1, column=col).value
-                    if cell_value:
-                        headers.append(cell_value.lower().strip())  # Normalize headers
-                
-                # Validate required columns
+
+                headers = [sheet.cell(row=1, column=col).value.lower().strip()
+                           for col in range(1, sheet.max_column + 1) if sheet.cell(row=1, column=col).value]
+
                 required_columns = ['student_id', 'name']
                 missing_columns = [col for col in required_columns if col not in headers]
-                
+
                 if missing_columns:
-                    missing_cols_str = ', '.join(missing_columns)
-                    messages.error(request, f"File Excel thiếu các cột bắt buộc: {missing_cols_str}")
-                    return redirect('classroom_detail', classroom_id=classroom.id)
-                
-                # Process data rows
+                    messages.error(request, f"File Excel thiếu các cột bắt buộc: {', '.join(missing_columns)}")
+                    return redirect('classroom_import_students', classroom_id=classroom.id)
+
                 students_created = 0
-                students_updated = 0
-                accounts_created = 0
-                skipped_count = 0
-                
-                # Start from the second row (after headers)
+                duplicate_students = []
+
                 for row in range(2, sheet.max_row + 1):
+                    student_id = str(sheet.cell(row=row, column=headers.index('student_id') + 1).value or '').strip()
+                    name = str(sheet.cell(row=row, column=headers.index('name') + 1).value or '').strip()
+
+                    email = (str(sheet.cell(row=row, column=headers.index('email') + 1).value) or '').strip() if 'email' in headers else ''
+                    phone = (str(sheet.cell(row=row, column=headers.index('phone') + 1).value) or '').strip() if 'phone' in headers else ''
+
+                    if not student_id or not name:
+                        continue
+
+                    if Student.objects.filter(student_id=student_id).exists():
+                        existing_student = Student.objects.get(student_id=student_id)
+                        duplicate_students.append(f"{existing_student.student_id} - {existing_student.name}")
+                        continue  # KHÔNG CẬP NHẬT GÌ CẢ
+
+                    # Nếu chưa tồn tại, thì tạo mới
                     try:
-                        student_id = str(sheet.cell(row=row, column=headers.index('student_id') + 1).value).strip()
-                        name = str(sheet.cell(row=row, column=headers.index('name') + 1).value).strip()
-                        
-                        # Get optional fields if they exist in headers
-                        email = None
-                        phone = None
-                        
-                        if 'email' in headers:
-                            email = str(sheet.cell(row=row, column=headers.index('email') + 1).value or '').strip()
-                        if 'phone' in headers:
-                            phone = str(sheet.cell(row=row, column=headers.index('phone') + 1).value or '').strip()
-                        
-                        # Skip empty rows
-                        if not student_id or not name:
-                            skipped_count += 1
-                            continue
-                            
-                        # Try to get existing student or create new one
-                        student, created = Student.objects.get_or_create(
+                        student = Student.objects.create(
                             student_id=student_id,
-                            defaults={
-                                'name': name,
-                                'phone': phone,
-                                'classroom': classroom
-                            }
+                            name=name,
+                            phone=phone
                         )
-                        
-                        if created:
-                            students_created += 1
-                        else:
-                            # Update existing student
-                            student.name = name
-                            student.phone = phone
-                            student.classroom = classroom
-                            student.save()
-                            students_updated += 1
-                        
-                        # Create user account if not exists
-                        if not student.user:
-                            user = User.objects.create_user(
-                                username=student_id,
-                                email=email if email else f"{student_id}@example.com",
-                                password='password123'
-                            )
-                            student.user = user
-                            student.save()
-                            accounts_created += 1
-                            
+                        classroom.students.add(student)
+                        students_created += 1
+
+                        user = User.objects.create_user(
+                            username=student_id,
+                            email=email if email else f"{student_id}@example.com",
+                            password='password123'
+                        )
+                        student.user = user
+                        student.save()
+
+                    except IntegrityError:
+                        duplicate_students.append(f"{student_id} (lỗi tạo trùng)")
+                        continue
                     except Exception as e:
                         print(f"Error processing row {row}: {e}")
                         continue
-                
-                # Prepare message
-                message_parts = []
+
                 if students_created > 0:
-                    message_parts.append(f"Đã thêm {students_created} sinh viên mới")
-                if students_updated > 0:
-                    message_parts.append(f"Đã cập nhật {students_updated} sinh viên")
-                if accounts_created > 0:
-                    message_parts.append(f"Đã tạo {accounts_created} tài khoản mới")
-                if skipped_count > 0:
-                    message_parts.append(f"{skipped_count} dòng bị bỏ qua (thiếu thông tin)")
-                
-                if message_parts:
-                    messages.success(request, ". ".join(message_parts) + ".")
-                
+                    messages.success(request, f"Đã thêm {students_created} sinh viên mới.")
+                if duplicate_students:
+                    messages.error(request, f"Các sinh viên bị trùng không được thêm: {', '.join(duplicate_students)}.")
+
             except Exception as e:
                 messages.error(request, f"Lỗi khi xử lý file Excel: {str(e)}")
-            
+
             return redirect('classroom_detail', classroom_id=classroom.id)
+
     else:
         form = StudentImportForm()
-    
+
     return render(request, 'core/admin/classroom_import_students.html', {
         'form': form,
         'classroom': classroom
     })
+
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -531,7 +502,7 @@ def class_grades(request, assignment_id):
         return redirect('teacher_dashboard')
     
     # Get all students in the classroom
-    students = Student.objects.filter(classroom=assignment.classroom).order_by('student_id')
+    students = assignment.classroom.students.all().order_by('student_id')
     
     # Get all grade types
     grade_types = GradeType.objects.all().order_by('id')
@@ -590,7 +561,7 @@ def teacher_class_students(request, assignment_id):
     if assignment.teacher.user != request.user:
         return HttpResponseForbidden("Bạn không có quyền truy cập trang này.")
     
-    students = Student.objects.filter(classroom=assignment.classroom).order_by('name')
+    students = assignment.classroom.students.all().order_by('name')
     
     return render(request, 'core/teacher/class_students.html', {
         'assignment': assignment,
@@ -786,7 +757,7 @@ def upload_grades(request, assignment_id):
                 student_count = 0
                 
                 # Map students to IDs for faster lookups - make IDs lowercase for case-insensitive matching
-                student_map = {student.student_id.lower(): student for student in Student.objects.filter(classroom=assignment.classroom)}
+                student_map = {student.student_id.lower(): student for student in assignment.classroom.students.all()}
                 
                 # Track processed student IDs to report statistics
                 processed_students = set()
@@ -1230,7 +1201,7 @@ def download_grades(request, assignment_id):
         sheet.cell(row=1, column=col, value=header)
     
     # Get all students in the class
-    students = Student.objects.filter(classroom=assignment.classroom).order_by('student_id')
+    students = assignment.classroom.students.all().order_by('student_id')
     
     # Write student data
     for row, student in enumerate(students, 2):
@@ -1276,7 +1247,7 @@ def student_list(request):
     sort_direction = request.GET.get('direction', 'asc')  # Default ascending
     
     # Start with all students
-    students = Student.objects.select_related('classroom').all()
+    students = Student.objects.prefetch_related('classrooms').all()
     
     # Apply classroom filter if selected
     if classroom_id:
@@ -1538,7 +1509,7 @@ def student_grades(request):
     
     # Get all teacher assignments for classes the student is enrolled in
     teacher_assignments = TeacherAssignment.objects.filter(
-        classroom__student=student
+        classroom__in=student.classrooms.all()
     ).select_related(
         'subject',
         'semester',
@@ -1663,7 +1634,7 @@ def dashboard_students(request):
     grades = Grade.objects.filter(student=student)
     
     # Calculate statistics
-    total_subjects = TeacherAssignment.objects.filter(classroom=student.classroom).count()
+    total_subjects = TeacherAssignment.objects.filter(classroom__in=student.classrooms.all()).count()
     completed_subjects = grades.values('teacher_assignment').distinct().count()
     ongoing_subjects = total_subjects - completed_subjects
     
@@ -1697,7 +1668,7 @@ def classroom_delete(request, classroom_id):
             return redirect('classroom_list')
         
         # Delete all students in the class
-        students = classroom.student_set.all()
+        students = classroom.students.all()
         for student in students:
             if student.user:
                 student.user.delete()  # Delete associated user account
@@ -1720,35 +1691,44 @@ def classroom_add_student(request, classroom_id):
         name = request.POST.get('name')
         
         if student_id and name:
-            try:
-                # Try to get existing student or create new one
-                student, created = Student.objects.get_or_create(
-                    student_id=student_id,
-                    defaults={
-                        'name': name,
-                        'classroom': classroom
-                    }
-                )
-                
-                if created:
-                    # Create user account for new student
-                    user = User.objects.create_user(
-                        username=student_id,
-                        email=f"{student_id}@example.com",
-                        password='password123'  # Default password
+            # Kiểm tra sinh viên đã tồn tại chưa
+            existing_student = Student.objects.filter(student_id=student_id).first()
+
+            if existing_student:
+                # Nếu tồn tại, báo lỗi + không thêm
+                messages.error(request, f"Sinh viên ID '{existing_student.student_id}' - tên '{existing_student.name}' đã tồn tại. Không thể thêm.")
+            else:
+                try:
+                    # Try to get existing student or create new one
+                    student, created = Student.objects.get_or_create(
+                        student_id=student_id,
+                        defaults={
+                            'name': name,
+                        }
                     )
-                    student.user = user
-                    student.save()
-                    messages.success(request, f'Đã thêm sinh viên {name} vào lớp {classroom.name}.')
-                else:
-                    # Update existing student
-                    student.name = name
-                    student.classroom = classroom
-                    student.save()
-                    messages.success(request, f'Đã cập nhật thông tin sinh viên {name}.')
                     
-            except Exception as e:
-                messages.error(request, f'Lỗi khi thêm sinh viên: {str(e)}')
+                    if created:
+                        # Create user account for new student
+                        user = User.objects.create_user(
+                            username=student_id,
+                            email=f"{student_id}@example.com",
+                            password='password123'  # Default password
+                        )
+                        student.user = user
+                        student.save()
+                        messages.success(request, f'Đã thêm sinh viên {name} vào lớp {classroom.name}.')
+                    else:
+                        # Update existing student
+                        student.name = name
+                        student.save()
+                        messages.success(request, f'Đã cập nhật thông tin sinh viên {name}.')
+
+                    # Thêm sinh viên vào lớp học (Many-to-Many)
+                    classroom.students.add(student)
+                    messages.success(request, f'Đã thêm sinh viên {name} vào lớp {classroom.name}.')
+                        
+                except Exception as e:
+                    messages.error(request, f'Lỗi khi thêm sinh viên: {str(e)}')
         else:
             messages.error(request, 'Vui lòng điền đầy đủ thông tin sinh viên.')
             
