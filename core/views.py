@@ -321,10 +321,18 @@ def classroom_import_students(request, classroom_id):
                     if not student_id or not name:
                         continue
 
-                    if Student.objects.filter(student_id=student_id).exists():
-                        existing_student = Student.objects.get(student_id=student_id)
-                        duplicate_students.append(f"{existing_student.student_id} - {existing_student.name}")
-                        continue  # KHÔNG CẬP NHẬT GÌ CẢ
+                    existing_student = Student.objects.filter(student_id=student_id).first()
+
+                    if existing_student:
+                        if classroom.students.filter(id=existing_student.id).exists():
+                            # Sinh viên đã thuộc lớp này → không thêm lại
+                            duplicate_students.append(f"{existing_student.student_id} - {existing_student.name}")
+                            continue
+                        else:
+                            # Sinh viên đã tồn tại nhưng chưa thuộc lớp → chỉ thêm vào lớp
+                            classroom.students.add(existing_student)
+                            students_created += 1
+                            continue
 
                     # Nếu chưa tồn tại, thì tạo mới
                     try:
