@@ -1001,9 +1001,33 @@
         <div class="card shadow-sm">
             <div class="card-header py-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-white fw-bold">
-                        <i class="fas fa-list me-2"></i>Danh sách lớp dạy
+                    <h5 class="mb-0 text-white fw-bold position-relative">
+                        <i class="fas fa-list me-2 position-relative">
+                          {% if unread_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-warning border border-light rounded-circle">
+                              <span class="visually-hidden">Có thông báo mới</span>
+                            </span>
+                          {% endif %}
+                        </i>
+                        Danh sách lớp dạy
                     </h5>
+
+                    <div class="dropdown mt-3">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                          Hoạt động mới
+                        </button>
+                        <ul class="dropdown-menu">
+                          {% for notify in notifications %}
+                            <li class="dropdown-item">
+                              {{ notify.message }}<br>
+                              <small class="text-muted">{{ notify.created_at|date:"H:i d/m/Y" }}</small>
+                            </li>
+                          {% empty %}
+                            <li class="dropdown-item text-muted">Không có thông báo</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+
                     <form method="get" class="d-flex gap-2">
                         {% if active_semesters.count > 1 %}
                         <select name="semester" class="form-select" style="width: auto;" onchange="this.form.submit()">
@@ -1011,7 +1035,7 @@
                             {% for semester in active_semesters %}
                             <option value="{{ semester.id }}" {% if request.GET.semester|add:"0" == semester.id %}selected{% endif %}>
                                 {{ semester.name }}
-                            </option>
+                          </option>
                             {% endfor %}
                         </select>
                         {% endif %}
@@ -1079,6 +1103,19 @@
 
 {% block extra_js %}
 <script>
+
+document.querySelector('.dropdown-toggle').addEventListener('click', function() {
+    fetch("{% url 'mark_notifications_read' %}", {
+        method: 'POST',
+        headers: {
+        'X-CSRFToken': '{{ csrf_token }}'
+        }
+    }).then(() => {
+        const badge = document.querySelector('.bg-warning');
+        if (badge) badge.remove();  // ẩn dấu chấm vàng
+    });
+    });
+
 document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
     const content = document.getElementById('content');

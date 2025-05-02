@@ -66,4 +66,5 @@ urlpatterns = [
     path('student/profile/', views.student_profile, name='student_profile'),
     path('student/grades/', views.student_grades, name='student_grades'),
     path('student/change-password/', views.student_change_password, name='student_change_password'),
+    path('notifications/mark-read/', views.mark_notifications_read, name='mark_notifications_read'),
 ] 

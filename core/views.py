@@ -12,6 +12,8 @@ from django.db import IntegrityError
 from urllib.parse import quote
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
+from .models import Notification
+from django.views.decorators.http import require_POST
 
 
 from .models import (
@@ -415,9 +417,15 @@ def teacher_assignment_create(request):
                 semester=semester
             )
             
-            if not created:
+            if created:
+                Notification.objects.create(
+                    user=teacher.user,
+                    message=f"Bạn đã được phân công lớp {classroom.name} môn {subject.name} học kỳ {semester.name}"
+                )
+            else:
                 messages.info(request, f'Phân công "{subject.name} - {classroom.name}" đã tồn tại cho giáo viên "{teacher}"')
         
+
         messages.success(request, 'Phân công giảng dạy đã được tạo.')
         return redirect('teacher_assignment_list')
     
@@ -460,13 +468,19 @@ def teacher_dashboard(request):
     if search_query:
         assignments = assignments.filter(subject__name__icontains=search_query)
     
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:5]
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+
     return render(request, 'core/teacher/dashboard.html', {
         'teacher': teacher,
         'assignments': assignments,
         'active_semesters': active_semesters,
         'current_date': current_date,
-        'search_query': search_query
+        'search_query': search_query,
+        'notifications': notifications,
+        'unread_count': unread_count
     })
+    
 
 @login_required
 @user_passes_test(is_teacher)
@@ -1741,3 +1755,9 @@ def classroom_add_student(request, classroom_id):
             messages.error(request, 'Vui lòng điền đầy đủ thông tin sinh viên.')
             
     return redirect('classroom_import_students', classroom_id=classroom.id) 
+
+@require_POST
+@login_required
+def mark_notifications_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'status': 'ok'})

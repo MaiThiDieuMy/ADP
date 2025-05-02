@@ -97,3 +97,9 @@ class GradeHistory(models.Model):
             return f"{self.grade.student} - Điểm {self.new_value} được tạo bởi {self.modified_by}"
         else:
             return f"{self.grade.student} - Thay đổi từ {self.old_value} thành {self.new_value} bởi {self.modified_by}"
+        
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
