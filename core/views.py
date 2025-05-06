@@ -440,6 +440,18 @@ def teacher_assignment_create(request):
         'semesters': semesters
     })
 
+@login_required
+@user_passes_test(is_admin)
+def teacher_assignment_delete(request, assignment_id):
+     if request.method == 'POST':
+         try:
+             assignment = get_object_or_404(TeacherAssignment, id=assignment_id)
+             assignment.delete()
+             return JsonResponse({'success': True, 'message': 'Phân công giảng dạy đã được xóa thành công.'})
+         except Exception as e:
+             return JsonResponse({'success': False, 'message': str(e)})
+     return JsonResponse({'success': False, 'message': 'Yêu cầu không hợp lệ.'})
+
 # Teacher views
 @login_required
 @user_passes_test(is_teacher)
