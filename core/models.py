@@ -8,6 +8,8 @@ class Teacher(models.Model):
     date_of_birth = models.DateField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    
+    fcm_token = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username

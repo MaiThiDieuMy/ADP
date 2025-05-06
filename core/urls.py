@@ -45,6 +45,7 @@ urlpatterns = [
     
     path('dashboard/assignments/', views.teacher_assignment_list, name='teacher_assignment_list'),
     path('dashboard/assignments/create/', views.teacher_assignment_create, name='teacher_assignment_create'),
+    path('dashboard/assignments/<int:assignment_id>/delete/', views.teacher_assignment_delete, name='teacher_assignment_delete'),
     
     # Teacher URLs
     path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
@@ -67,4 +68,6 @@ urlpatterns = [
     path('student/grades/', views.student_grades, name='student_grades'),
     path('student/change-password/', views.student_change_password, name='student_change_password'),
     path('notifications/mark-read/', views.mark_notifications_read, name='mark_notifications_read'),
-] 
+    path('save-fcm-token/', views.save_fcm_token, name='save_fcm_token'),
+
+]

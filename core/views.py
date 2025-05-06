@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+db.sqlite3from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
@@ -14,7 +14,9 @@ from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from .models import Notification
 from django.views.decorators.http import require_POST
-
+from django.views.decorators.csrf import csrf_exempt
+import requests
+from core.fcm import send_fcm_v1  # hoặc từ app_name.fcm nếu bạn để ở nơi khác
 
 from .models import (
     Teacher, Subject, ClassRoom, Semester, 
@@ -418,12 +420,15 @@ def teacher_assignment_create(request):
             )
             
             if created:
-                Notification.objects.create(
-                    user=teacher.user,
-                    message=f"Bạn đã được phân công lớp {classroom.name} môn {subject.name} học kỳ {semester.name}"
-                )
-            else:
-                messages.info(request, f'Phân công "{subject.name} - {classroom.name}" đã tồn tại cho giáo viên "{teacher}"')
+                # Gửi FCM nếu giáo viên có token
+                if teacher.fcm_token:
+                    title = "Thông báo phân công lớp"
+                    body = f"Lớp {classroom.name} môn {subject.name} kỳ {semester.name}"
+                    success, message_id = send_fcm_v1(teacher.fcm_token, title, body)
+                    print("✅ Gửi FCM:", success, message_id)
+                else:
+                    print(f"⚠️ Không tìm thấy fcm_token cho giáo viên {teacher.user.username}")
+
         
 
         messages.success(request, 'Phân công giảng dạy đã được tạo.')
@@ -439,6 +444,18 @@ def teacher_assignment_create(request):
         'classrooms': classrooms,
         'semesters': semesters
     })
+
+@login_required
+@user_passes_test(is_admin)
+def teacher_assignment_delete(request, assignment_id):
+    if request.method == 'POST':
+        try:
+            assignment = get_object_or_404(TeacherAssignment, id=assignment_id)
+            assignment.delete()
+            return JsonResponse({'success': True, 'message': 'Phân công giảng dạy đã được xóa thành công.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': 'Yêu cầu không hợp lệ.'})
 
 # Teacher views
 @login_required
@@ -1761,3 +1778,37 @@ def classroom_add_student(request, classroom_id):
 def mark_notifications_read(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     return JsonResponse({'status': 'ok'})
+
+
+@csrf_exempt
+@login_required
+def save_fcm_token(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        token = data.get('token')
+        if hasattr(request.user, 'teacher'):
+            teacher = request.user.teacher
+            teacher.fcm_token = token
+            teacher.save()
+
+            try:
+                # 👇 Sử dụng TeacherAssignment để lấy phân công mới nhất
+                from core.models import TeacherAssignment
+                latest_assignment = TeacherAssignment.objects.filter(teacher=teacher).order_by('-id').first()
+                if latest_assignment:
+                    classroom = latest_assignment.classroom
+                    subject = latest_assignment.subject
+                    semester = latest_assignment.semester
+
+                    from core.fcm import send_fcm_v1
+                    send_fcm_v1(
+                        token,
+                        "📢 Bạn vừa được phân công giảng dạy",
+                        f"Lớp: {classroom.name}, Môn: {subject.name}, Kỳ: {semester.name}"
+                    )
+            except Exception as e:
+                print("❌ Lỗi khi gửi thông báo:", str(e))
+
+        return JsonResponse({'status': 'success'})
+
+    return JsonResponse({'status': 'invalid'}, status=400)

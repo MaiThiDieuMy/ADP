@@ -601,42 +601,31 @@
                 </div>
             </div>
             <div class="card-body">
-                <!-- Hidden form for deletion -->
-                <form id="deleteForm" method="post" style="display: none;">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="assignment_id" id="assignmentId">
-                </form>
-                
                 {% if assignments %}
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
                             <tr>
+                                <th>ID</th>
                                 <th>Giáo viên</th>
                                 <th>Môn học</th>
-                                <th>Lớp</th>
+                                <th>Lớp học</th>
                                 <th>Học kỳ</th>
                                 <th>Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for assignment in assignments %}
-                            <tr>
-                                <td>
-                                    <a href="{% url 'teacher_detail' assignment.teacher.id %}" class="text-primary">
-                                        {{ assignment.teacher.user.get_full_name }}
-                                    </a>
-                                </td>
+                            <tr id="assignment-{{ assignment.id }}">
+                                <td>{{ assignment.id }}</td>
+                                <td>{{ assignment.teacher.name }}</td>
                                 <td>{{ assignment.subject.name }}</td>
                                 <td>{{ assignment.classroom.name }}</td>
                                 <td>{{ assignment.semester.name }}</td>
                                 <td>
-                                    <div class="btn-group">
-                                        <button class="btn btn-danger" onclick="deleteAssignment({{ assignment.id }})" title="Xóa phân công">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
+                                    <button class="btn btn-danger btn-sm d-flex align-items-center justify-content-center" onclick="deleteAssignment({{ assignment.id }})" title="Xóa">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -674,15 +663,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function deleteAssignment(id) {
     if (confirm('Bạn có chắc chắn muốn xóa phân công giảng dạy này không?')) {
-        const form = document.getElementById('deleteForm');
-        const assignmentIdInput = document.getElementById('assignmentId');
-        
-        // Set the assignment ID
-        assignmentIdInput.value = id;
-        
-        // Submit the form
-        form.submit();
+        fetch(`/dashboard/assignments/${id}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  alert(data.message);
+                  document.getElementById(`assignment-${id}`).style.transition = 'opacity 0.5s';
+                  document.getElementById(`assignment-${id}`).style.opacity = '0';
+                  setTimeout(() => {
+                      document.getElementById(`assignment-${id}`).remove();
+                  }, 500);
+              } else {
+                  alert(data.message || 'Xóa không thành công.');
+              }
+          }).catch(error => {
+              alert('Đã xảy ra lỗi. Vui lòng thử lại.');
+          });
     }
 }
 </script>
-{% endblock %} 
+{% endblock %}

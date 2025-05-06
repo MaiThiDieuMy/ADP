@@ -990,6 +990,11 @@
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <h1 class="hero-title">DASHBOARD GIÁO VIÊN </h1>
+                        <div class="mt-3">
+                            <i class="fas fa-bell position-relative" style="font-size: 1.5rem;">
+                              <span id="notif-dot" class="position-absolute top-0 start-100 translate-middle p-1 bg-warning border border-light rounded-circle d-none"></span>
+                            </i>
+                          </div>
                         <p class="hero-subtitle">Quản lý thông tin lớp học, điểm sinh viên</p>
                     </div>
                 </div>
@@ -1103,6 +1108,8 @@
 
 {% block extra_js %}
 <script>
+
+
 
 document.querySelector('.dropdown-toggle').addEventListener('click', function() {
     fetch("{% url 'mark_notifications_read' %}", {
@@ -1245,5 +1252,80 @@ document.querySelectorAll('.stats-card').forEach(card => {
         }
     }
 </style>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-messaging-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAv0zcFQaMT_t0hkQfQjL5AMvvuMBPaMRg",
+    authDomain: "fcm-core-ef7bd.firebaseapp.com",
+    projectId: "fcm-core-ef7bd",
+    storageBucket: "fcm-core-ef7bd.firebasestorage.app",
+    messagingSenderId: "1003393924896",
+    appId: "1:1003393924896:web:abe406fb7da6542c27e145",
+    measurementId: "G-D4ZG73JKLE"
+    };
+
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
+
+ // Đăng ký Service Worker
+navigator.serviceWorker.register('/static/firebase-messaging-sw.js')
+.then((registration) => {
+  console.log("✅ Service Worker đăng ký");
+
+  messaging.getToken({
+    vapidKey: "BCTxt5xrrXW3f-JR5PRRcWRCg8QodyIGRmM_JRdOh_JzxdCUCIgd5kyjUSN12TmlaVj2wKCJWhwbKoWF0p6AuZg",
+    serviceWorkerRegistration: registration
+  }).then((currentToken) => {
+    if (currentToken) {
+      console.log("📥 FCM Token:", currentToken);
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;}
+      fetch("/save-fcm-token/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ token: currentToken }),
+        credentials: "include"  // rất quan trọng để gửi cookie session
+      });
+    }
+  });
+});
+
+  // Khi nhận thông báo từ server (foreground)
+  messaging.onMessage(function(payload) {
+    console.log('🔔 Thông báo nhận được:', payload);
+    const { title, body } = payload.notification;
+
+    // Hiển thị popup thông báo
+    if (Notification.permission === "granted") {
+      new Notification(title, { body });
+    }
+
+    alert("🔔 Bạn vừa nhận được một thông báo: " + title + "\n" + body);
+
+    // Hiện dấu chấm vàng trên icon chuông
+    const dot = document.getElementById("notif-dot");
+    if (dot) dot.classList.remove("d-none");
+  });
+</script>
+
 
 {% endblock %} 
