@@ -8,4 +8,3 @@ __pycache__/
 # Bỏ qua các file hệ thống của VS Code
 .vscode/
 
-core/firebase/firebase-service-account.json
