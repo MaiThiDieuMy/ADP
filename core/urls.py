@@ -45,6 +45,9 @@ urlpatterns = [
     
     path('dashboard/assignments/', views.teacher_assignment_list, name='teacher_assignment_list'),
     path('dashboard/assignments/create/', views.teacher_assignment_create, name='teacher_assignment_create'),
+    path('teacher-assignments/', views.teacher_assignment_list, name='teacher_assignment_list'),
+    path('teacher-assignments/create/', views.teacher_assignment_create, name='teacher_assignment_create'),
+    path('teacher-assignments/delete/', views.teacher_assignment_delete, name='teacher_assignment_delete'),
     
     # Teacher URLs
     path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),

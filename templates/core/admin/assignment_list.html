@@ -602,9 +602,8 @@
             </div>
             <div class="card-body">
                 <!-- Hidden form for deletion -->
-                <form id="deleteForm" method="post" style="display: none;">
+                <form id="deleteForm" method="post" action="{% url 'teacher_assignment_delete' %}" style="display: none;">
                     {% csrf_token %}
-                    <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="assignment_id" id="assignmentId">
                 </form>
                 
@@ -676,11 +675,7 @@ function deleteAssignment(id) {
     if (confirm('Bạn có chắc chắn muốn xóa phân công giảng dạy này không?')) {
         const form = document.getElementById('deleteForm');
         const assignmentIdInput = document.getElementById('assignmentId');
-        
-        // Set the assignment ID
         assignmentIdInput.value = id;
-        
-        // Submit the form
         form.submit();
     }
 }
