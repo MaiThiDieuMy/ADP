@@ -1237,7 +1237,8 @@ def download_grades(request, assignment_id):
     
     # Set headers
     headers = ['Mã SV', 'Họ tên']
-    grade_types = GradeType.objects.all().order_by('name')
+    # Get grade types and sort by name to match web display
+    grade_types = GradeType.objects.all().order_by('-name')  # Reverse order to match web display
     for grade_type in grade_types:
         headers.append(grade_type.name)
     
@@ -1260,7 +1261,9 @@ def download_grades(request, assignment_id):
                 grade_type=grade_type,
                 teacher_assignment=assignment
             ).first()
-            sheet.cell(row=row, column=col, value=grade.value if grade else '')
+            # Round grade to 1 decimal place if it exists
+            grade_value = round(grade.value, 1) if grade and grade.value is not None else ''
+            sheet.cell(row=row, column=col, value=grade_value)
     
     # Generate filename with Vietnamese characters
     filename = f"{assignment.classroom.name}_{assignment.subject.name}.xlsx"
