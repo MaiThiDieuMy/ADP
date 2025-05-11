@@ -818,6 +818,12 @@
                 </div>
                 
                 {% if students %}
+                    <div class="d-flex justify-content-end mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="customFormulaBtn" data-bs-toggle="modal" data-bs-target="#formulaModal">
+                            <i class="fas fa-calculator"></i>
+                            <span class="formula-active-indicator d-none ms-1">•</span>
+                        </button>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-hover table-bordered">
                             <thead class="table-light">
@@ -836,13 +842,7 @@
                                         </th>
                                     {% endfor %}
                                     <th class="average-grade">
-                                        <div class="d-flex align-items-center">
-                                            <span>Điểm tổng kết</span>
-                                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="customFormulaBtn" data-bs-toggle="modal" data-bs-target="#formulaModal">
-                                                <i class="fas fa-calculator"></i>
-                                                <span class="formula-active-indicator d-none ms-1">•</span>
-                                            </button>
-                                        </div>
+                                        <span>Điểm tổng kết</span>
                                     </th>
                                     <th>Thao tác</th>
                                 </tr>
@@ -1408,7 +1408,73 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add event listener for save all button
     $('#saveAllBtn').on('click', function() {
-        $('.btn-save-row').click();
+        const saveButtons = $('.btn-save-row');
+        let completedSaves = 0;
+        let totalSaves = saveButtons.length;
+        
+        saveButtons.each(function() {
+            const button = $(this);
+            const row = button.closest('tr');
+            const studentId = row.data('student-id');
+            const inputs = row.find('.grade-input');
+            const promises = [];
+
+            inputs.each(function() {
+                const input = $(this);
+                const gradeTypeId = input.data('grade-type-id');
+                const gradeId = input.data('grade-id');
+                const value = input.val();
+                const version = input.data('version');
+
+                if (value !== input.data('original-value')) {
+                    const promise = $.ajax({
+                        url: '{% url "update_grade" %}',
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            student_id: studentId,
+                            grade_type_id: gradeTypeId,
+                            grade_id: gradeId,
+                            value: value,
+                            version: version
+                        })
+                    });
+
+                    promises.push(promise);
+                }
+            });
+
+            if (promises.length > 0) {
+                Promise.all(promises)
+                    .then(responses => {
+                        // Update data attributes with new values
+                        responses.forEach(response => {
+                            if (response.success) {
+                                const input = row.find(`input[data-grade-type-id="${response.grade_type_id}"]`);
+                                input.data('grade-id', response.grade_id);
+                                input.data('original-value', input.val());
+                                input.data('version', response.version);
+                            }
+                        });
+                        completedSaves++;
+                        if (completedSaves === totalSaves) {
+                            showAlert('Đã lưu tất cả điểm thành công!');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error saving grades:', error);
+                        showAlert('Có lỗi xảy ra khi lưu điểm. Vui lòng thử lại.', 'danger');
+                    });
+            } else {
+                completedSaves++;
+                if (completedSaves === totalSaves) {
+                    showAlert('Đã lưu tất cả điểm thành công!');
+                }
+            }
+        });
     });
 
     // Add event listener for view history button
