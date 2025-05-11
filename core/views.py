@@ -1585,23 +1585,25 @@ def student_grades(request):
         final_grade = None
         letter_grade = None
         
-        # Find the final grade in the grades dictionary
+        # Calculate final grade as average of all grades
+        valid_grades = []
         for grade_type_id, grade in grade_dict.get(assignment.id, {}).items():
-            if grade.grade_type.name.lower() == 'tổng kết':
-                final_grade = grade.value
-                # Convert to letter grade
-                if final_grade is not None:
-                    if final_grade >= 8.5:
-                        letter_grade = 'A'
-                    elif final_grade >= 7.0:
-                        letter_grade = 'B'
-                    elif final_grade >= 5.5:
-                        letter_grade = 'C'
-                    elif final_grade >= 4.0:
-                        letter_grade = 'D'
-                    else:
-                        letter_grade = 'F'
-                break
+            if grade.value is not None:
+                valid_grades.append(grade.value)
+        
+        if valid_grades:
+            final_grade = round(sum(valid_grades) / len(valid_grades), 1)  # Round to 1 decimal place
+            # Convert to letter grade
+            if final_grade >= 8.5:
+                letter_grade = 'A'
+            elif final_grade >= 7.0:
+                letter_grade = 'B'
+            elif final_grade >= 5.5:
+                letter_grade = 'C'
+            elif final_grade >= 4.0:
+                letter_grade = 'D'
+            else:
+                letter_grade = 'F'
             
         grouped_subjects[semester].append({
             'subject': assignment.subject,
