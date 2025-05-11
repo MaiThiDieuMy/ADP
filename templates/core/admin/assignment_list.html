@@ -601,6 +601,12 @@
                 </div>
             </div>
             <div class="card-body">
+                <!-- Hidden form for deletion -->
+                <form id="deleteForm" method="post" action="{% url 'teacher_assignment_delete' %}" style="display: none;">
+                    {% csrf_token %}
+                    <input type="hidden" name="assignment_id" id="assignmentId">
+                </form>
+                
                 {% if assignments %}
                 <div class="table-responsive">
                     <table class="table">
@@ -663,26 +669,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function deleteAssignment(id) {
     if (confirm('Bạn có chắc chắn muốn xóa phân công giảng dạy này không?')) {
-        fetch(`/dashboard/assignments/${id}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            },
-        }).then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  alert(data.message);
-                  document.getElementById(`assignment-${id}`).style.transition = 'opacity 0.5s';
-                  document.getElementById(`assignment-${id}`).style.opacity = '0';
-                  setTimeout(() => {
-                      document.getElementById(`assignment-${id}`).remove();
-                  }, 500);
-              } else {
-                  alert(data.message || 'Xóa không thành công.');
-              }
-          }).catch(error => {
-              alert('Đã xảy ra lỗi. Vui lòng thử lại.');
-          });
+        const form = document.getElementById('deleteForm');
+        const assignmentIdInput = document.getElementById('assignmentId');
+        assignmentIdInput.value = id;
+        form.submit();
     }
 }
 </script>

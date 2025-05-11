@@ -1,4 +1,4 @@
-db.sqlite3from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
@@ -420,12 +420,21 @@ def teacher_assignment_create(request):
             )
             
             if created:
-                # Gửi FCM nếu giáo viên có token
+                 # Gửi FCM nếu giáo viên có token
                 if teacher.fcm_token:
                     title = "Thông báo phân công lớp"
                     body = f"Lớp {classroom.name} môn {subject.name} kỳ {semester.name}"
                     success, message_id = send_fcm_v1(teacher.fcm_token, title, body)
-                    print("✅ Gửi FCM:", success, message_id)
+                    
+                    # Lưu nội dung thông báo FCM vào Notification nếu gửi thành công
+                    if success:
+                        Notification.objects.create(
+                            user=teacher.user,
+                            message=body
+                        )
+                        print("✅ Gửi FCM:", success, message_id)
+                    else:
+                        print(f"⚠️ Không thể gửi FCM cho giáo viên {teacher.user.username}: {message_id}")
                 else:
                     print(f"⚠️ Không tìm thấy fcm_token cho giáo viên {teacher.user.username}")
 
@@ -447,15 +456,15 @@ def teacher_assignment_create(request):
 
 @login_required
 @user_passes_test(is_admin)
-def teacher_assignment_delete(request, assignment_id):
+def teacher_assignment_delete(request):
     if request.method == 'POST':
-        try:
+        assignment_id = request.POST.get('assignment_id')
+        if assignment_id:
             assignment = get_object_or_404(TeacherAssignment, id=assignment_id)
             assignment.delete()
-            return JsonResponse({'success': True, 'message': 'Phân công giảng dạy đã được xóa thành công.'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
-    return JsonResponse({'success': False, 'message': 'Yêu cầu không hợp lệ.'})
+            messages.success(request, 'Đã xóa phân công giảng dạy thành công.')
+        return redirect('teacher_assignment_list')
+    return redirect('teacher_assignment_list')
 
 # Teacher views
 @login_required
@@ -619,35 +628,63 @@ def update_grade(request):
             new_value = data.get('value')
             version = data.get('version')
 
+            # Validate input
+            if not student_id or not grade_type_id:
+                return JsonResponse({'success': False, 'error': 'Thiếu thông tin bắt buộc'})
+
             student = get_object_or_404(Student, id=student_id)
             grade_type = get_object_or_404(GradeType, id=grade_type_id)
 
+            # Get teacher assignment
+            assignment = get_object_or_404(
+                TeacherAssignment,
+                classroom__in=student.classrooms.all(),
+                teacher=request.user.teacher
+            )
+
+            # Validate grade value if provided
+            if new_value != '':
+                try:
+                    float_value = float(new_value)
+                    if float_value < 0 or float_value > 10:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'Điểm phải là số từ 0 đến 10'
+                        })
+                except ValueError:
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'Điểm không hợp lệ: {new_value}'
+                    })
+
             if grade_id:
+                # Update existing grade
                 grade = get_object_or_404(Grade, id=grade_id)
-                if grade.value != new_value:
-                    # Record grade history
+                if str(grade.value) != str(new_value):
+                    # Record grade history before updating
                     GradeHistory.objects.create(
                         grade=grade,
                         old_value=grade.value,
-                        new_value=new_value,
+                        new_value=float_value if new_value != '' else None,
                         modified_by=request.user,
                         action='update'
                     )
-                    grade.value = new_value
+                    grade.value = float_value if new_value != '' else None
                     grade.last_modified_by = request.user
                     grade.save()
             else:
+                # Create new grade
                 grade = Grade.objects.create(
                     student=student,
-                    teacher_assignment=student.classroom.teacherassignment_set.get(teacher=request.user.teacher),
+                    teacher_assignment=assignment,
                     grade_type=grade_type,
-                    value=new_value,
+                    value=float_value if new_value != '' else None,
                     last_modified_by=request.user
                 )
                 # Record grade history for new grade
                 GradeHistory.objects.create(
                     grade=grade,
-                    new_value=new_value,
+                    new_value=float_value if new_value != '' else None,
                     modified_by=request.user,
                     action='create'
                 )
@@ -658,7 +695,8 @@ def update_grade(request):
                 teacher_assignment=grade.teacher_assignment
             ).values_list('value', flat=True)
             
-            average = sum(all_grades) / len(all_grades) if all_grades else None
+            valid_grades = [g for g in all_grades if g is not None]
+            average = sum(valid_grades) / len(valid_grades) if valid_grades else None
 
             return JsonResponse({
                 'success': True,
@@ -741,7 +779,6 @@ def upload_grades(request, assignment_id):
                 for col in range(1, sheet.max_column + 1):
                     cell_value = sheet.cell(row=1, column=col).value
                     if cell_value:
-                        # Clean up header name by stripping whitespace and converting to lowercase for comparison
                         headers.append({
                             'original': str(cell_value).strip(), 
                             'normalized': str(cell_value).strip().lower()
@@ -750,7 +787,7 @@ def upload_grades(request, assignment_id):
                 # Extract normalized header names for validation
                 normalized_headers = [h['normalized'] for h in headers]
                 
-                # Validate headers (must include student_id and at least one grade type)
+                # Validate headers
                 if 'student_id' not in normalized_headers:
                     messages.error(request, "File Excel phải có cột 'student_id'")
                     return redirect('class_grades', assignment_id=assignment.id)
@@ -766,26 +803,22 @@ def upload_grades(request, assignment_id):
                         student_id_col_idx = idx + 1
                         break
                 
-                # Get all existing grade types for better matching
+                # Get all existing grade types
                 existing_grade_types = {gt.name.lower(): gt for gt in GradeType.objects.all()}
                 
-                # Map normalized header names to actual GradeType objects
+                # Map headers to grade types
                 grade_types = {}
                 new_grade_types = []
                 
                 for header in headers:
                     if header['normalized'] != 'student_id':
-                        # Check for existing grade type with same name (case insensitive)
                         if header['normalized'] in existing_grade_types:
-                            # Use existing grade type
                             grade_types[header['original']] = existing_grade_types[header['normalized']]
                         else:
-                            # Create new grade type with original case
                             grade_type = GradeType.objects.create(name=header['original'])
                             grade_types[header['original']] = grade_type
                             new_grade_types.append(header['original'])
                 
-                # Notify about new grade types created
                 if new_grade_types:
                     messages.info(request, f"Đã tạo mới các loại điểm: {', '.join(new_grade_types)}")
                 
@@ -795,30 +828,24 @@ def upload_grades(request, assignment_id):
                 skipped_count = 0
                 student_count = 0
                 
-                # Map students to IDs for faster lookups - make IDs lowercase for case-insensitive matching
+                # Map students to IDs for faster lookups
                 student_map = {student.student_id.lower(): student for student in assignment.classroom.students.all()}
-                
-                # Track processed student IDs to report statistics
                 processed_students = set()
                 
-                # Process each row in the Excel sheet
+                # Process each row
                 for row in range(2, sheet.max_row + 1):
-                    # Get student_id value from the correct column
                     student_id_cell = sheet.cell(row=row, column=student_id_col_idx)
                     if not student_id_cell.value:
                         skipped_count += 1
                         continue
                     
-                    # Make sure student_id is a string and normalized for comparison
                     student_id = str(student_id_cell.value).strip()
                     student_id_lower = student_id.lower()
                     
-                    # Check if this student exists in the map
                     if student_id_lower in student_map:
                         student = student_map[student_id_lower]
                         processed_students.add(student_id_lower)
                         
-                        # Process each grade column
                         for idx, header in enumerate(headers):
                             if header['normalized'] != 'student_id':
                                 col_idx = idx + 1
@@ -839,26 +866,32 @@ def upload_grades(request, assignment_id):
                                             )
                                             
                                             if not created:
-                                                # Record grade history
+                                                # Record grade history before updating
                                                 GradeHistory.objects.create(
                                                     grade=grade,
                                                     old_value=grade.value,
                                                     new_value=grade_value,
-                                                    modified_by=request.user
+                                                    modified_by=request.user,
+                                                    action='update'
                                                 )
-                                                
-                                                # Update grade
                                                 grade.value = grade_value
                                                 grade.last_modified_by = request.user
                                                 grade.save()
+                                            else:
+                                                # Record grade history for new grade
+                                                GradeHistory.objects.create(
+                                                    grade=grade,
+                                                    new_value=grade_value,
+                                                    modified_by=request.user,
+                                                    action='create'
+                                                )
                                             
                                             updated_count += 1
                                         else:
-                                            error_count += 1  # Value out of range
+                                            error_count += 1
                                     except (ValueError, TypeError):
-                                        error_count += 1  # Not a number
+                                        error_count += 1
                     else:
-                        # Student ID not found in this class
                         error_count += 1
                 
                 student_count = len(processed_students)
@@ -1177,25 +1210,26 @@ def update_grades(request):
                         GradeHistory.objects.create(
                             grade=grade,
                             old_value=grade.value,
-                            new_value=value,
+                            new_value=float_value if value != '' else None,
                             modified_by=request.user,
                             action='update'
                         )
-                        grade.value = float_value
+                        grade.value = float_value if value != '' else None
                         grade.last_modified_by = request.user
                         grade.save()
+
                 else:
                     grade = Grade.objects.create(
                         student=student,
                         teacher_assignment=assignment,
                         grade_type=grade_type,
-                        value=float_value,
+                        value=float_value if value != '' else None,
                         last_modified_by=request.user
                     )
                     # Record grade history for new grade
                     GradeHistory.objects.create(
                         grade=grade,
-                        new_value=value,
+                        new_value=float_value if value != '' else None,
                         modified_by=request.user,
                         action='create'
                     )
@@ -1231,7 +1265,8 @@ def download_grades(request, assignment_id):
     
     # Set headers
     headers = ['Mã SV', 'Họ tên']
-    grade_types = GradeType.objects.all().order_by('name')
+    # Get grade types and sort by name to match web display
+    grade_types = GradeType.objects.all().order_by('-name')  # Reverse order to match web display
     for grade_type in grade_types:
         headers.append(grade_type.name)
     
@@ -1254,7 +1289,9 @@ def download_grades(request, assignment_id):
                 grade_type=grade_type,
                 teacher_assignment=assignment
             ).first()
-            sheet.cell(row=row, column=col, value=grade.value if grade else '')
+            # Round grade to 1 decimal place if it exists
+            grade_value = round(grade.value, 1) if grade and grade.value is not None else ''
+            sheet.cell(row=row, column=col, value=grade_value)
     
     # Generate filename with Vietnamese characters
     filename = f"{assignment.classroom.name}_{assignment.subject.name}.xlsx"
@@ -1274,23 +1311,14 @@ def download_grades(request, assignment_id):
 @login_required
 @user_passes_test(is_admin)
 def student_list(request):
-    # Get all classrooms for the filter dropdown
-    classrooms = ClassRoom.objects.all().order_by('name')
+    # Get sort direction
+    direction = request.GET.get('direction', 'asc')  # Default ascending
     
-    # Get the selected classroom filter
-    classroom_id = request.GET.get('classroom')
+    # Get search query
     search_query = request.GET.get('search', '').strip()
     
-    # Get sort parameters
-    sort_by = request.GET.get('sort', 'name')  # Default sort by name
-    sort_direction = request.GET.get('direction', 'asc')  # Default ascending
-    
     # Start with all students
-    students = Student.objects.prefetch_related('classrooms').all()
-    
-    # Apply classroom filter if selected
-    if classroom_id:
-        students = students.filter(classroom_id=classroom_id)
+    students = Student.objects.all()
     
     # Apply search filter if provided
     if search_query:
@@ -1299,29 +1327,17 @@ def student_list(request):
             Q(name__icontains=search_query)
         )
     
-    # Apply sorting
-    if sort_by == 'student_id':
-        order_by = 'student_id'
-    elif sort_by == 'name':
-        order_by = 'name'
-    elif sort_by == 'classroom':
-        order_by = 'classroom__name'
-    else:
-        order_by = 'name'
-    
-    # Apply sort direction
-    if sort_direction == 'desc':
+    # Apply sorting by student_id
+    order_by = 'student_id'
+    if direction == 'desc':
         order_by = f'-{order_by}'
     
     students = students.order_by(order_by)
     
     context = {
         'students': students,
-        'classrooms': classrooms,
         'search_query': search_query,
-        'current_sort': sort_by,
-        'current_direction': sort_direction,
-        'classroom_id': classroom_id
+        'current_direction': direction
     }
     
     return render(request, 'core/admin/student_list.html', context)
@@ -1587,27 +1603,28 @@ def student_grades(request):
             
         # Get grades for each grade type
         subject_grades = []
-        total_grade = 0
-        grade_count = 0
         
         for grade_type in grade_types:
             grade = grade_dict.get(assignment.id, {}).get(grade_type.id)
-            if grade and grade.value is not None:
-                total_grade += grade.value
-                grade_count += 1
-                
             subject_grades.append({
                 'type': grade_type.name,
                 'value': grade.value if grade else None,
                 'updated_at': grade.updated_at if grade else None
             })
         
-        # Calculate final grade
-        final_grade = round(total_grade / grade_count, 1) if grade_count > 0 else None
-        
-        # Convert to letter grade
+        # Get final grade from the Grade model
+        final_grade = None
         letter_grade = None
-        if final_grade is not None:
+        
+        # Calculate final grade as average of all grades
+        valid_grades = []
+        for grade_type_id, grade in grade_dict.get(assignment.id, {}).items():
+            if grade.value is not None:
+                valid_grades.append(grade.value)
+        
+        if valid_grades:
+            final_grade = round(sum(valid_grades) / len(valid_grades), 1)  # Round to 1 decimal place
+            # Convert to letter grade
             if final_grade >= 8.5:
                 letter_grade = 'A'
             elif final_grade >= 7.0:
