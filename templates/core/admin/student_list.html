@@ -655,16 +655,9 @@
                             <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sinh viên..." value="{{ search_query }}">
                         </div>
                         <div class="filter-box">
-                            <select name="sort_by" class="form-select" onchange="updateSort(this)">
-                                <option value="">Sắp xếp theo</option>
-                                <option value="student_id" {% if sort_by == 'student_id' %}selected{% endif %}>Mã sinh viên</option>
-                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Họ và tên</option>
-                            </select>
-                        </div>
-                        <div class="filter-box">
-                            <select name="sort_direction" class="form-select" onchange="updateSort(this)">
-                                <option value="asc" {% if sort_direction == 'asc' %}selected{% endif %}>Tăng dần</option>
-                                <option value="desc" {% if sort_direction == 'desc' %}selected{% endif %}>Giảm dần</option>
+                            <select name="direction" class="form-select" onchange="this.form.submit()">
+                                <option value="asc" {% if current_direction == 'asc' %}selected{% endif %}>Sắp xếp mã SV tăng dần</option>
+                                <option value="desc" {% if current_direction == 'desc' %}selected{% endif %}>Sắp xếp mã SV giảm dần</option>
                             </select>
                         </div>
                         <a href="{% url 'admin_dashboard' %}" class="btn btn-back">
@@ -737,28 +730,18 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sidebarCollapse) sidebarCollapse.addEventListener('click', toggleSidebar);
     if (sidebarClose) sidebarClose.addEventListener('click', toggleSidebar);
     if (overlay) overlay.addEventListener('click', toggleSidebar);
-});
 
-function updateSort(selectElement) {
-    const sortColumn = selectElement.value;
-    const sortDirection = document.querySelector('select[name="sort_direction"]').value;
-    const searchQuery = document.querySelector('input[name="search"]').value;
-    
-    let url = new URL(window.location.href);
-    
-    if (sortColumn) {
-        url.searchParams.set('sort_by', sortColumn);
-        url.searchParams.set('sort_direction', sortDirection);
-    } else {
-        url.searchParams.delete('sort_by');
-        url.searchParams.delete('sort_direction');
+    // Add event listeners for search input
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.form.submit();
+            }, 500);
+        });
     }
-    
-    if (searchQuery) {
-        url.searchParams.set('search', searchQuery);
-    }
-    
-    window.location.href = url.toString();
-}
+});
 </script>
 {% endblock %} 
